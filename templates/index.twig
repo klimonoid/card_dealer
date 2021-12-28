@@ -1,0 +1,10 @@
+{% extends 'parts/base.twig' %}
+
+{% block body %}
+    <h1>Домашняя страница</h1>
+    {% if user is not null %}
+        <p>Здравствуйте, {{ user.given_name|escape }}!</p>
+    {% else %}
+        <p>Вы не зашли в систему!</p>
+    {% endif %}
+{% endblock %}

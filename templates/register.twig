@@ -1,0 +1,85 @@
+{% extends 'parts/base.twig' %}
+
+{% block body %}
+    <h1>Register Form</h1>
+
+    {% if message is not null%}
+        <div class="alert alert-danger" role="alert">
+            {{ message }}
+        </div>
+    {% endif %}
+    <form method="post" action="/register-post">
+        <div class="row mb-3">
+            <div class="col">
+                <label for="surname" class="form-label">Фамилия</label>
+                <input type="text" name="surname" class="form-control" id="surname" placeholder="Иванов" value="{{ form ? form.surname }}">
+            </div>
+            <div class="col">
+                <label for="given_name" class="form-label">Имя</label>
+                <input type="text" name="given_name" class="form-control" id="given_name" placeholder="Иван" value="{{ form ? form.given_name }}">
+            </div>
+            <div class="col">
+                <label for="patronymic" class="form-label">Отчество</label>
+                <input type="text" name="patronymic" class="form-control" id="patronymic" placeholder="Иванович" value="{{ form ? form.patronymic }}">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-1">
+                <label for="age" class="form-label">Возраст</label>
+                <input type="text" name="age" class="form-control" id="age" placeholder="69" value="{{ form ? form.age }}">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-auto">
+                <label for="Passport" class="col-sm-2 col-form-label">Паспорт:</label>
+            </div>
+            <div class="col-auto">
+                <label for="series" class="col-sm-2 col-form-label">Серия</label>
+            </div>
+            <div class="col-md-1">
+                <input type="text" name="series" class="form-control" id="series" placeholder="4515" value="{{ form ? form.series }}">
+            </div>
+            <div class="col-auto">
+                <label for="number" class="col-sm-2 col-form-label">Номер</label>
+            </div>
+            <div class="col-md-1">
+                <input type="text" name="number" class="form-control" id="number" placeholder="123456" value="{{ form ? form.number }}">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-auto">
+                <label for="phone" class="form-label">Телефон</label>
+                <input type="text" name="phone" class="form-control" id="phone" placeholder="+79261234567" value="{{ form ? form.phone }}">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col">
+                <label for="password" class="form-label">Пароль</label>
+                <input type="password" name="password" class="form-control" id="password">
+            </div>
+            <div class="col">
+                <label for="confirm_password" class="form-label">Повторите пароль</label>
+                <input type="password" name="confirm_password" class="form-control" id="confirm_password">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+    </form>
+{% endblock %}
+
+
+{#        <div class="form-group">#}
+{#            <label for="username">Username</label>#}
+{#            <input type="text" name="username" class="form-control" id="username" value="" />#}
+{#        </div>#}
+{#        <div class="form-group">#}
+{#            <label for="email">Email</label>#}
+{#            <input type="text" name="email" class="form-control" id="email" aria-describedby="emailHelp" value="" />#}
+{#        </div>#}
+{#        <div class="form-group">#}
+{#            <label for="password">Password</label>#}
+{#            <input type="password" name="password" class="form-control" id="password" value="" />#}
+{#        </div>#}
+{#        <div class="form-group">#}
+{#            <label for="confirm-password">Password</label>#}
+{#            <input type="password" name="confirm_password" class="form-control" id="confirm_password" value="" />#}
+{#        </div>#}
