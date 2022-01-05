@@ -129,6 +129,104 @@ class Authorization
                 'user_id' => $user['id'],
                 'given_name' => $user['given_name'],
                 'phone' => $user['phone'],
+                'is_staff' => false,
+            ]);
+            return true;
+        }
+
+        throw new AuthorizationException('Неверные номер телефона или пароль');
+    }
+
+    /**
+     * @param array $data
+     * @return bool
+     * @throws AuthorizationException
+     */
+    public function register_employee(array $data): bool
+    {
+        if(empty($data['surname'])) {
+            throw new AuthorizationException('Фамилия не должна быть пустой');
+        }
+        if(empty($data['given_name'])) {
+            throw new AuthorizationException('Имя не должно быть пустым');
+        }
+        if(empty($data['age'])) {
+            throw new AuthorizationException('Возраст не должен быть пустым');
+        }
+        if($data['age'] < 18) {
+            throw new AuthorizationException('Сотруднику должно быть больше 18');
+        }
+        if(empty($data['phone'])) {
+            throw new AuthorizationException('Номер телефона не должен быть пустым');
+        }
+        if(preg_match($data['phone'], $this->pattern_phone)) {
+            throw new AuthorizationException('Неправильный формат номера');
+        }
+        if(empty($data['password'])) {
+            throw new AuthorizationException('Пароль не должен быть пустым');
+        }
+        if(preg_match($data['password'], $this->pattern_password)) {
+            throw new AuthorizationException('Слишком простой пароль');
+        }
+        if($data['password'] !== $data['confirm_password']) {
+            throw new AuthorizationException('Пароли должны совпадать');
+        }
+
+        $statement = $this->database->getConnection()->prepare(
+            'SELECT * FROM employee WHERE phone = :phone'
+        );
+        $statement->execute([
+            'phone' => $data['phone']
+        ]);
+        $employee = $statement->fetch();
+        if(!empty($employee)) {
+            throw new AuthorizationException('Сотрудник с таким номером телефона уже зарегистрирован');
+        }
+
+        $statement = $this->database->getConnection()->prepare(
+            'INSERT INTO employee (surname, given_name, patronymic, age, phone, password) VALUES (:surname, :given_name, :patronymic, :age, :phone, :password)'
+        );
+        $statement->execute([
+            'surname' => $data['surname'],
+            'given_name' => $data['given_name'],
+            'patronymic' => $data['patronymic'],
+            'age' => $data['age'],
+            'phone' => $data['phone'],
+            'password' => password_hash($data['password'], PASSWORD_BCRYPT)
+        ]);
+        return true;
+    }
+
+    /**
+     * @param string $phone
+     * @param string $password
+     * @return bool
+     * @throws AuthorizationException
+     */
+    public function login_employee(string $phone, string $password): bool
+    {
+        if(empty($phone)) {
+            throw new AuthorizationException('Номер телефона не должен быть пустым');
+        }
+        if(empty($password)) {
+            throw new AuthorizationException('Пароль не должен быть пустым');
+        }
+        $statement = $this->database->getConnection()->prepare(
+            'SELECT * FROM employee WHERE phone = :phone'
+        );
+        $statement->execute([
+            'phone' => $phone
+        ]);
+        $employee = $statement->fetch();
+        if(empty($employee)) {
+            throw new AuthorizationException('Сотрудника с таким номером телефона не существует');
+        }
+        if(password_verify($password, $employee['password'])) {
+            $this->session->setData('user', [
+                'user_id' => $employee['id'],
+                'given_name' => $employee['given_name'],
+                'phone' => $employee['phone'],
+                'is_staff' => true,
             ]);
             return true;
         }

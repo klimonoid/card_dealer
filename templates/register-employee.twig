@@ -1,14 +1,14 @@
 {% extends 'parts/base.twig' %}
 
 {% block body %}
-    <h1>Регистрация</h1>
+    <h1>Регистрация сотрудника</h1>
 
     {% if message is not null%}
         <div class="alert alert-danger" role="alert">
             {{ message }}
         </div>
     {% endif %}
-    <form method="post" action="/register-post">
+    <form method="post" action="/register-employee-post">
         <div class="row mb-3">
             <div class="col">
                 <label for="surname" class="form-label">Фамилия</label>
@@ -35,25 +35,6 @@
         </div>
         <div class="row mb-3">
             <div class="col-auto">
-                <label for="Passport" class="col-sm-2 col-form-label">Паспорт:</label>
-            </div>
-            <div class="col-auto">
-                <label for="series" class="col-sm-2 col-form-label">Серия</label>
-            </div>
-            <div class="col-md-1">
-                <input type="text" name="series" class="form-control" id="series"
-                       placeholder="4515" value="{{ form ? form.series }}">
-            </div>
-            <div class="col-auto">
-                <label for="number" class="col-sm-2 col-form-label">Номер</label>
-            </div>
-            <div class="col-md-1">
-                <input type="text" name="number" class="form-control" id="number"
-                       placeholder="123456" value="{{ form ? form.number }}">
-            </div>
-        </div>
-        <div class="row mb-3">
-            <div class="col-auto">
                 <label for="phone" class="form-label">Телефон</label>
                 <input type="text" name="phone" class="form-control" id="phone"
                        placeholder="+79261234567" value="{{ form ? form.phone }}">
@@ -72,21 +53,3 @@
         <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
     </form>
 {% endblock %}
-
-
-{#        <div class="form-group">#}
-{#            <label for="username">Username</label>#}
-{#            <input type="text" name="username" class="form-control" id="username" value="" />#}
-{#        </div>#}
-{#        <div class="form-group">#}
-{#            <label for="email">Email</label>#}
-{#            <input type="text" name="email" class="form-control" id="email" aria-describedby="emailHelp" value="" />#}
-{#        </div>#}
-{#        <div class="form-group">#}
-{#            <label for="password">Password</label>#}
-{#            <input type="password" name="password" class="form-control" id="password" value="" />#}
-{#        </div>#}
-{#        <div class="form-group">#}
-{#            <label for="confirm-password">Password</label>#}
-{#            <input type="password" name="confirm_password" class="form-control" id="confirm_password" value="" />#}
-{#        </div>#}

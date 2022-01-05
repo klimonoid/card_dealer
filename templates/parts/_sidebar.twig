@@ -1,0 +1,32 @@
+<div class="sidebar-sticky">
+    <ul class="list-group">
+        {% if user is null %}
+            <a class="dropdown">
+                <a class="dropdown-toggle list-group-item list-group-item-action" id="Show_receipt"
+                   data-bs-toggle="dropdown" aria-expanded="false">Я пользователь</a>
+                <ul class="dropdown-menu" aria-labelledby="Show_receipt">
+                    <li><a class="dropdown-item" href="/">Войти</a></li>
+                    <li><a class="dropdown-item" href="/register">Зарегистрироваться</a></li>
+                </ul>
+            </a>
+            <a class="dropdown">
+                <a class="dropdown-toggle list-group-item list-group-item-action" id="Show_receipt"
+                   data-bs-toggle="dropdown" aria-expanded="false">Я сотрудник</a>
+                <ul class="dropdown-menu" aria-labelledby="Show_receipt">
+                    <li><a class="dropdown-item" href="/login-employee">Войти</a></li>
+                    <li><a class="dropdown-item" href="/register-employee">Зарегистрироваться</a></li>
+                </ul>
+            </a>
+        {% else %}
+            {% if user is not null and user.is_staff == false %}
+                <a href="" class="list-group-item list-group-item-action">Мои карты</a>
+                <a href="" class="list-group-item list-group-item-action">Мои счета</a>
+            {% elseif user is not null and user.is_staff == true %}
+                <a href="" class="list-group-item list-group-item-action">Заявления</a>
+                <a href="" class="list-group-item list-group-item-action">Договора</a>
+                <a href="" class="list-group-item list-group-item-action">Карты</a>
+                <a href="" class="list-group-item list-group-item-action">Счета</a>
+            {% endif %}
+        {% endif %}
+    </ul>
+</div>

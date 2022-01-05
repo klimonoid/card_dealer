@@ -28,9 +28,7 @@ $sessionMiddleware = function (ServerRequestInterface $request, RequestHandlerIn
     $session->start();
     $response = $handler->handle($request);
 
-
     $session->save();
-
     return $response;
 };
 
@@ -47,24 +45,16 @@ $database = new Database($dsn, $username, $password);
 $authorization = new Authorization($database, $session);
 
 //Обработчики:
-//Домашняя страница
+//Домашняя страница с логином!!!!!
 $app->get('/',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($twig, $session) {
-    //Рендерим twig
+
+    $params = (array) $request->getParsedBody();
+//    var_dump($params);
+
+        //Рендерим twig
     $body = $twig->render('index.twig', [
         'user' => $session->getData('user'),
-    ]);
-
-    //Передаём twig на отрисовку
-    $response->getBody()->write($body);
-    return $response;
-});
-
-//Отрисовка логина клиента
-$app->get('/login',
-    function (ServerRequestInterface $request, ResponseInterface $response) use ($twig, $session) {
-    //Рендерим twig
-    $body = $twig->render('login.twig', [
         'message' => $session->flush('message'),
         'form' => $session->flush('form'),
     ]);
@@ -73,6 +63,7 @@ $app->get('/login',
     $response->getBody()->write($body);
     return $response;
 });
+
 //Залогинить клиента
 $app->post('/login-post',
     function (ServerRequestInterface $request, ResponseInterface $response) use($authorization, $session) {
@@ -83,15 +74,13 @@ $app->post('/login-post',
     } catch (AuthorizationException $exception) {
         $session->setData('message', $exception->getMessage());
         $session->setData('form', $params);
-        return $response->withHeader('Location', '/login')
+        return $response->withHeader('Location', '/')
             ->withStatus(302);
     }
 
     return $response->withHeader('Location', '/')
         ->withStatus(302);
 });
-
-
 //Отрисовка регистрации клиента
 $app->get('/register',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($twig, $session) {
@@ -121,13 +110,76 @@ $app->post('/register-post',
     return $response->withHeader('Location', '/')
         ->withStatus(302);
 });
-//Завершить сессию для клиента
+
+
+
+//Сотрудник
+//Отрисовка логина сотрудника
+$app->get('/login-employee',
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($twig, $session) {
+    //Рендерим twig
+    $body = $twig->render('login-employee.twig', [
+        'message' => $session->flush('message'),
+        'form' => $session->flush('form'),
+    ]);
+
+    //Передаём twig на отрисовку
+    $response->getBody()->write($body);
+    return $response;
+});
+//Залогинить сотрудника
+$app->post('/login-employee-post',
+    function (ServerRequestInterface $request, ResponseInterface $response) use($authorization, $session) {
+        $params = (array) $request->getParsedBody();
+
+        try {
+            $authorization->login_employee($params['phone'], $params['password']);
+        } catch (AuthorizationException $exception) {
+            $session->setData('message', $exception->getMessage());
+            $session->setData('form', $params);
+            return $response->withHeader('Location', '/login-employee')
+                ->withStatus(302);
+        }
+
+        return $response->withHeader('Location', '/')
+            ->withStatus(302);
+    });
+//Отрисовка регистрации сотрудника
+$app->get('/register-employee',
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($twig, $session) {
+        //Рендерим twig
+        $body = $twig->render('register-employee.twig', [
+            'message' => $session->flush('message'),
+            'form' => $session->flush('form'),
+        ]);
+
+        //Передаём twig на отрисовку
+        $response->getBody()->write($body);
+        return $response;
+    });
+//Зарегистрировать сотрудника
+$app->post('/register-employee-post',
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($authorization, $session) {
+        $params = (array)$request->getParsedBody();
+        try {
+            $authorization->register_employee($params);
+        } catch (AuthorizationException $exception) {
+            $session->setData('message', $exception->getMessage());
+            $session->setData('form', $params);
+            return $response->withHeader('Location', '/register-employee')
+                ->withStatus(302);
+        }
+
+        return $response->withHeader('Location', '/')
+            ->withStatus(302);
+    });
+
+//Завершить сессию
 $app->get('/logout',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($session) {
-    $session->setData('user', null);
-    return $response->withHeader('Location', '/')
-        ->withStatus(302);
-});
-
+        $session->setData('user', null);
+        return $response->withHeader('Location', '/')
+            ->withStatus(302);
+    });
 //Запускаем приложение
 $app->run();

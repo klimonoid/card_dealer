@@ -1,0 +1,16 @@
+<header class="sticky">
+    <nav class="navbar navbar-light bg-light mb-3">
+        <div class="container-fluid">
+            <a class="navbar-brand">Card Dealer</a>
+            <form class="d-flex">
+                {% if user is not null %}
+                    <a class="btn btn-sm btn-outline-secondary pt-1 me-2" href="/">Главная</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="/logout">Выйти</a>
+                {% else %}
+{#                    <a class="btn btn-sm btn-outline-secondary me-2" href="/">Войти</a>#}
+{#                    <a class="btn btn-sm btn-outline-secondary" href="/register">Зарегистрироваться</a>#}
+                {% endif %}
+            </form>
+        </div>
+    </nav>
+</header>
