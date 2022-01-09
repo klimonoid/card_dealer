@@ -106,7 +106,7 @@ $app->post('/register-post',
                 ->withStatus(302);
         }
 
-        return $response->withHeader('Location', '/')
+        return $response->withHeader('Location', '/login-employee')
             ->withStatus(302);
     });
 //Редактирование клиента
@@ -195,6 +195,31 @@ $app->post('/register-employee-post',
         return $response->withHeader('Location', '/')
             ->withStatus(302);
     });
+//Редактирование сотрудника
+$app->post('/edit-employee-post',
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($session, $editor) {
+        $params = (array)$request->getParsedBody();
+        try {
+            $editor->edit_employee($params, $session->getData('user')['user_id']);
+        } catch (AuthorizationException $exception) {
+            $session->setData('message', $exception->getMessage());
+            $session->setData('form', $params);
+            return $response->withHeader('Location', '/')
+                ->withStatus(302);
+        }
+
+        return $response->withHeader('Location', '/')
+            ->withStatus(302);
+    });
+
+//Удаление сотрудника
+$app->get('/delete-employee',
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($session, $editor) {
+        $editor->delete_employee($session->getData("user")["user_id"]);
+        return $response->withHeader('Location', '/login-employee')
+            ->withStatus(302);
+    });
+
 
 //Завершить сессию
 $app->get('/logout',
