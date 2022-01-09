@@ -40,14 +40,14 @@
             <div class="col-auto">
                 <label for="series" class="col-sm-2 col-form-label">Серия</label>
             </div>
-            <div class="col-md-1">
+            <div class="col-auto">
                 <input type="text" name="series" class="form-control" id="series"
                        placeholder="4515" value="{{ form ? form.series }}">
             </div>
             <div class="col-auto">
                 <label for="number" class="col-sm-2 col-form-label">Номер</label>
             </div>
-            <div class="col-md-1">
+            <div class="col-auto">
                 <input type="text" name="number" class="form-control" id="number"
                        placeholder="123456" value="{{ form ? form.number }}">
             </div>
@@ -72,21 +72,3 @@
         <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
     </form>
 {% endblock %}
-
-
-{#        <div class="form-group">#}
-{#            <label for="username">Username</label>#}
-{#            <input type="text" name="username" class="form-control" id="username" value="" />#}
-{#        </div>#}
-{#        <div class="form-group">#}
-{#            <label for="email">Email</label>#}
-{#            <input type="text" name="email" class="form-control" id="email" aria-describedby="emailHelp" value="" />#}
-{#        </div>#}
-{#        <div class="form-group">#}
-{#            <label for="password">Password</label>#}
-{#            <input type="password" name="password" class="form-control" id="password" value="" />#}
-{#        </div>#}
-{#        <div class="form-group">#}
-{#            <label for="confirm-password">Password</label>#}
-{#            <input type="password" name="confirm_password" class="form-control" id="confirm_password" value="" />#}
-{#        </div>#}

@@ -19,6 +19,8 @@
             </a>
         {% else %}
             {% if user is not null and user.is_staff == false %}
+                <a href="" class="list-group-item list-group-item-action">Мои заявления</a>
+                <a href="" class="list-group-item list-group-item-action">Мои договора</a>
                 <a href="" class="list-group-item list-group-item-action">Мои карты</a>
                 <a href="" class="list-group-item list-group-item-action">Мои счета</a>
             {% elseif user is not null and user.is_staff == true %}

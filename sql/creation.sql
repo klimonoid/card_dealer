@@ -11,10 +11,6 @@ CREATE TABLE client
     password CHAR(100) NOT NULL
 );
 
-# CHECK (0 < age AND age < 120)
-# CHECK (100 < number AND number < 1000000)
-
-
 CREATE TABLE account
 (
     id SERIAL PRIMARY KEY NOT NULL,
@@ -32,13 +28,6 @@ CREATE TABLE account
     house INT NOT NULL,
     building INT
 );
-
-# CHECK (country_code = 4)
-# CHECK (0 < region_code AND region_code < 100)
-# CHECK (0 <= division_code AND division_code <= 99)
-# CHECK (50 <= credit_institution_number AND credit_institution_number <= 999)
-# CHECK ( house > 0 )
-# CHECK (building > 0)
 
 CREATE TABLE card
 (
@@ -71,8 +60,8 @@ CREATE TABLE application
     number BIGINT NOT NULL,
     applicant_id INT NOT NULL REFERENCES client (id),
     date_of_submission TIME NOT NULL,
-    path_to_scan CHAR(100) NOT NULL,
-    status ENUM('accepted', 'approved', 'rejected') NOT NULL
+    status ENUM('accepted', 'approved', 'rejected') NOT NULL,
+    comment CHAR(255)
 );
 
 CREATE TABLE contract
@@ -84,6 +73,6 @@ CREATE TABLE contract
     card_id INT REFERENCES card (id),
     employee_id INT REFERENCES employee (id),
     date_of_submission TIME,
-    path_to_scan CHAR(100) NOT NULL,
-    status ENUM ('ready', 'accepted', 'rejected') NOT NULL
+    status ENUM ('ready', 'accepted', 'rejected') NOT NULL,
+    comment CHAR(255)
 );

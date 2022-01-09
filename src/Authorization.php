@@ -85,6 +85,18 @@ class Authorization
         }
 
         $statement = $this->database->getConnection()->prepare(
+            'SELECT * FROM client WHERE series = :series AND number = :number'
+        );
+        $statement->execute([
+            'series' => $data['series'],
+            'number' => $data['number']
+        ]);
+        $user = $statement->fetch();
+        if(!empty($user)) {
+            throw new AuthorizationException('Пользователь с таким паспортом уже зарегистрирован');
+        }
+
+        $statement = $this->database->getConnection()->prepare(
             'INSERT INTO client (surname, given_name, patronymic, age, series, number, phone, password) VALUES (:surname, :given_name, :patronymic, :age, :series, :number, :phone, :password)'
         );
         $statement->execute([

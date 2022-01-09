@@ -4,43 +4,87 @@
 
     {% if user is not null %}
         <h1>Здравствуйте , {{ user.given_name|escape }}!</h1>
-        <p>На этой странице вы можете увидеть информацию о ваших текущих заявках
-            а также изменить личную информацию</p>
+        <p>На этой странице вы можете увидеть информацию о вас и изменить её</p>
+        {% if message is not null%}
+            <div class="alert alert-danger" role="alert">
+                {{ message }}
+            </div>
+        {% endif %}
+        {% if user.is_staff == false %}
+            <p>Вы пользователь!</p>
+            <form method="post" action="/edit-post">
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="surname" class="form-label">Фамилия</label>
+                        <input type="text" name="surname" class="form-control" id="surname"
+                               value="{{ form ? form.surname }}">
+                    </div>
+                    <div class="col">
+                        <label for="given_name" class="form-label">Имя</label>
+                        <input type="text" name="given_name" class="form-control" id="given_name"
+                               value="{{ form ? form.given_name }}">
+                    </div>
+                    <div class="col">
+                        <label for="patronymic" class="form-label">Отчество</label>
+                        <input type="text" name="patronymic" class="form-control" id="patronymic"
+                               value="{{ form ? form.patronymic }}">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-1">
+                        <label for="age" class="form-label">Возраст</label>
+                        <input type="text" name="age" class="form-control" id="age"
+                               value="{{ form ? form.age }}">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-auto">
+                        <label for="Passport" class="col-sm-2 col-form-label">Паспорт:</label>
+                    </div>
+                    <div class="col-auto">
+                        <label for="series" class="col-sm-2 col-form-label">Серия</label>
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" name="series" class="form-control" id="series"
+                               value="{{ form ? form.series }}">
+                    </div>
+                    <div class="col-auto">
+                        <label for="number" class="col-sm-2 col-form-label">Номер</label>
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" name="number" class="form-control" id="number"
+                               value="{{ form ? form.number }}">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-auto">
+                        <label for="phone" class="form-label">Телефон</label>
+                        <input type="text" name="phone" class="form-control" id="phone"
+                               value="{{ form ? form.phone }}">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" name="password" class="form-control" id="password">
+                    </div>
+                    <div class="col">
+                        <label for="confirm_password" class="form-label">Повторите пароль</label>
+                        <input type="password" name="confirm_password"
+                               class="form-control" id="confirm_password">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Отредактировать</button>
+            </form>
+            <div class="row mb-3">
+                <div class="d-flex justify-content-end">
+                    <a class="btn btn-danger" href="/delete-client">Удалить пользователя</a>
+                </div>
+            </div>
+        {% else %}
+            <p>Вы сотрудник!</p>
 
-        <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-            <input type="radio" class="btn-check" name="btn-radio" id="applications_btn"
-                   autocomplete="off" value="Applications" checked>
-            <label class="btn btn-outline-primary" for="applications_btn">Заявки</label>
-
-            <input type="radio" class="btn-check" name="btn-radio" id="client_settings_btn"
-                   autocomplete="off" value="Settings">
-            <label class="btn btn-outline-primary" for="client_settings_btn">Настройки пользователя</label>
-        </div>
-
-{#        <div class="row" id="content">#}
-{#            <p>PIZDAAAAAA</p>#}
-{#        </div>#}
-
-{#        TODO#}
-{#        <script>#}
-{#            let filler;#}
-{#            let theDiv = document.getElementById("content");#}
-{#            $('input:radio[name="btn-radio"]').change(function() {#}
-{#                if ($(this).val() === 'Applications') {#}
-{#                    // theDiv = document.getElementById("content");#}
-{#                    // filler = document.createTextNode("PIZDAAAAAAA");#}
-{#                    // theDiv.appendChild(filler);#}
-{#                    $.ajax({#}
-{#                        method: "GET",#}
-{#                        url: "http://localhost:8888/"#}
-{#                    })#}
-{#                } else {#}
-{#                    // theDiv = document.getElementById("content");#}
-{#                    // filler = document.createTextNode("hui");#}
-{#                    // theDiv.appendChild(filler);#}
-{#                }#}
-{#            });#}
-{#        </script>#}
+        {% endif %}
 
     {% else %}
         <h1>Авторизация</h1>
@@ -55,8 +99,8 @@
             <div class="row mb-3">
                 <div class="col-auto">
                     <label for="phone" class="form-label">Телефон</label>
-                    <input type="text" name="phone" class="form-control" id="phone" placeholder="+79261234567"
-                           value="{{ form ? form.phone }}">
+                    <input type="text" name="phone" class="form-control"
+                           id="phone" placeholder="+79261234567" value="{{ form ? form.phone }}">
                 </div>
             </div>
             <div class="row mb-3">
