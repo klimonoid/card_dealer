@@ -1,0 +1,89 @@
+{% extends 'parts/base.twig' %}
+
+{% block ajax %}
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            let num = 10;
+            let inProcess = false;
+            // это будет запускаться тогда, когда страница будет прокручиваться
+            $(window).scroll(function () {
+                if ($(window).scrollTop() + $(window).height() >= $(document).height() && !inProcess) {
+                    $.ajax({
+                        url: "../../src/loadApplications.php",
+                        method: "GET",
+                        data: {"num": num},
+                        beforeSend: function () {
+                            inProcess = true;
+                        }
+                    }).done(function (data) {
+                        data = jQuery.parseJSON(data)
+                        console.log(data)
+                        if (data.length > 0) {
+                            $.each(data, function (index, data) {
+                                $("#applications-list").append(
+                                    "<div class=\"card mb-3\">" +
+                                        "<div class=\"container mt-1 mb-1\">" +
+                                            "<div class=\"row align-items-center\">" +
+                                                "<div class=\"col-1 align-content-center\">" +
+                                                    "<b>" + data.id + "</b>" +
+                                                "</div>" +
+                                                "<div class=\"col align-content-center\">" +
+                                                    "<b>Дата создания:</b>" + data.date_of_submission +
+                                                    " <b>Заявитель:</b> " +
+                                                    data.surname + " " +
+                                                    data.given_name + " " +
+                                                    data.patronymic +
+                                                "</div>" +
+                                                "<div class=\"col-3 align-content-center\">" +
+                                                    "<div class=\"d-flex justify-content-end\">" +
+                                                        "<a class=\"btn btn-outline-primary\" href=\"/applications/" + data.id + "\">" +
+                                                            "Подробнее</a>" +
+                                                    "</div>" +
+                                                "</div>" +
+                                            "</div>" +
+                                        "</div>" +
+                                    "</div>"
+                                )
+                            });
+                            inProcess = false;
+                            num += 10;
+                        }
+                    });
+                }
+            })
+        })
+    </script>
+
+{% endblock %}
+
+{% block body %}
+    <h1>Заявления</h1>
+    <p>На этой странице представлен список всех необработанных заявлений</p>
+    <div id="applications-list">
+        {% for application in applications %}
+            <div class="card mb-3">
+                <div class="container mt-1 mb-1">
+                    <div class="row align-items-center">
+                        <div class="col-1 align-content-center">
+                            <b>{{ application.id }}</b>
+                        </div>
+                        <div class="col align-content-center">
+                                <b>Дата создания:</b> {{ application.date_of_submission }}
+                                <b>Заявитель:</b>
+                                {{ application.surname }}
+                                {{ application.given_name }}
+                                {{ application.patronymic }}
+                        </div>
+                        <div class="col-3 align-content-center">
+                            <div class="d-flex justify-content-end">
+                                <a class="btn btn-outline-primary" href="/applications/{{ application.id }}">
+                                    Подробнее</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

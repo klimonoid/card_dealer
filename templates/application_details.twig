@@ -1,0 +1,42 @@
+{% extends 'parts/base.twig' %}
+
+{% block body %}
+    <div class="card">
+        <div class="card-body align-content-center">
+            <h1 class="card-title">Заявление №{{ application.id }}</h1>
+            <h6 class="card-subtitle mb-2 text-muted">{{ application.date_of_submission }}</h6>
+            <p class="card-text">
+                <b>ФИО:</b> {{ application.surname }} {{ application.given_name }} {{ application.patronymic }}
+                <br>
+                <b>Возраст:</b> {{ application.age }}
+                <br>
+                <b>Паспорт:</b>
+                <br>
+                <b>Серия:</b> {{ application.series }} <b>Номер:</b> {{ application.number }}
+                <br>
+                <b>Телефон:</b> {{ application.phone }}
+            </p>
+            <form method="post" action="/edit-application/{{ application.id }}">
+                <div class="row mb-3">
+                    <label for="comment" class="form-label">Комментарий</label>
+                    <textarea class="form-control" name="comment" id="comment" rows="3"></textarea>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios1"
+                           value="approved" checked>
+                    <label class="form-check-label" for="exampleRadios1">
+                        Одобрить
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios2"
+                           value="rejected">
+                    <label class="form-check-label" for="exampleRadios2">
+                        Отклонить
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">Завершить обработку</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
