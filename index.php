@@ -114,7 +114,7 @@ $app->post('/register-post',
                 ->withStatus(302);
         }
 
-        return $response->withHeader('Location', '/login-employee')
+        return $response->withHeader('Location', '/')
             ->withStatus(302);
     });
 //Редактирование клиента
@@ -195,7 +195,7 @@ $app->post('/register-employee-post',
         } catch (AuthorizationException $exception) {
             $session->setData('message', $exception->getMessage());
             $session->setData('form', $params);
-            return $response->withHeader('Location', '/register-employee')
+            return $response->withHeader('Location', '/login-employee')
                 ->withStatus(302);
         }
 
