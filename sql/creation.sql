@@ -69,6 +69,7 @@ CREATE TABLE contract
     id SERIAL PRIMARY KEY NOT NULL,
     number BIGINT NOT NULL,
     client_id INT NOT NULL REFERENCES client (id),
+    application_id INT REFERENCES application (id),
     account_id INT REFERENCES account (id),
     card_id INT REFERENCES card (id),
     employee_id INT REFERENCES employee (id),

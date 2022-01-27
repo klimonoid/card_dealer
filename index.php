@@ -24,6 +24,10 @@ $twig = new Environment($loader);
 $app = AppFactory::create();
 $app->addBodyParsingMiddleware(); //Для работы с POST
 
+// Для отслеживания ошибок
+$app->addRoutingMiddleware();
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+
 $session = new Session();
 $sessionMiddleware = function (ServerRequestInterface $request,
                                RequestHandlerInterface $handler) use($session) {
