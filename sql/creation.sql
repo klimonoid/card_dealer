@@ -1,3 +1,5 @@
+CREATE DATABASE card_dealer;
+
 CREATE TABLE client
 (
     id SERIAL PRIMARY KEY NOT NULL,
@@ -77,3 +79,31 @@ CREATE TABLE contract
     status ENUM ('ready', 'accepted', 'rejected') NOT NULL,
     comment CHAR(255)
 );
+
+CREATE TRIGGER account_num_trigger
+    BEFORE INSERT ON account
+    FOR EACH ROW
+BEGIN
+    SET @number = @id;
+END;
+
+CREATE TRIGGER card_num_trigger
+    BEFORE INSERT ON card
+    FOR EACH ROW
+BEGIN
+    SET @number = @id;
+END;
+
+CREATE TRIGGER application_num_trigger
+    BEFORE INSERT ON application
+    FOR EACH ROW
+BEGIN
+    SET @number = @id;
+END;
+
+CREATE TRIGGER contract_num_trigger
+    BEFORE INSERT ON contract
+    FOR EACH ROW
+BEGIN
+    SET @number = @id;
+END;
