@@ -61,7 +61,7 @@ CREATE TABLE application
     id SERIAL PRIMARY KEY NOT NULL,
     number BIGINT NULL,
     applicant_id INT NOT NULL REFERENCES client (id),
-    inspector_id INT NOT NULL REFERENCES employee (id),
+    inspector_id INT NULL REFERENCES employee (id),
     date_of_submission TIME NOT NULL,
     status ENUM('accepted', 'approved', 'rejected') NOT NULL,
     comment CHAR(255)
@@ -73,7 +73,7 @@ CREATE TABLE contract
     number BIGINT NULL,
     client_id INT NOT NULL REFERENCES client (id),
     application_id INT NOT NULL REFERENCES application (id),
-    inspector_id INT NOT NULL REFERENCES employee (id),
+    inspector_id INT NULL REFERENCES employee (id),
     account_id INT REFERENCES account (id),
     card_id INT REFERENCES card (id),
     employee_id INT REFERENCES employee (id),
