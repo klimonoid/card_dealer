@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App;
 
-use http\Exception\InvalidArgumentException;
+use App\ApplicationException;
 
 class ApplicationManagement
 {
@@ -46,7 +46,7 @@ class ApplicationManagement
             $status = 'rejected';
         }
         if(strlen($params['comment']) > 255) {
-            throw new InvalidArgumentException('Your comment is too long (max is 255)');
+            throw new ApplicationException('Ваш комментарий слишком длинный (Максимальный размер – 255 символов)');
         }
         $statement = $this->database->getConnection()->prepare(
             'UPDATE application SET status = :status, comment = :comment

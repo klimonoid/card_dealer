@@ -1,5 +1,7 @@
 <?php
 
+use App\ApplicationException;
+use App\ApplicationManagement;
 use App\Authorization;
 use App\AuthorizationException;
 use App\Database;
@@ -14,6 +16,10 @@ use App\Editor;
 
 //Подключаем composer
 require __DIR__ . '/vendor/autoload.php';
+
+require_once "/Users/klim/PhpstormProjects/card_dealer/src/users/Authorization.php";
+require_once "/Users/klim/PhpstormProjects/card_dealer/src/users/AuthorizationException.php";
+require_once "/Users/klim/PhpstormProjects/card_dealer/src/general/utils.php";
 
 //Указываем, откуда подгружать шаблоны
 $loader = new FilesystemLoader('templates');
@@ -50,6 +56,7 @@ $database = new Database($dsn, $username, $password);
 
 $authorization = new Authorization($database, $session);
 $editor = new Editor($database, $session);
+$applications = new ApplicationManagement($database, $session);
 
 //Обработчики:
 //Домашняя страница с логином и редакированием пользователя!!!!!
@@ -129,7 +136,6 @@ $app->post('/edit-post',
         return $response->withHeader('Location', '/')
             ->withStatus(302);
     });
-
 //Удаление клиента
 $app->get('/delete-client',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($session, $editor) {
@@ -215,7 +221,6 @@ $app->post('/edit-employee-post',
         return $response->withHeader('Location', '/')
             ->withStatus(302);
     });
-
 //Удаление сотрудника
 $app->get('/delete-employee',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($session, $editor) {
@@ -224,6 +229,92 @@ $app->get('/delete-employee',
             ->withStatus(302);
     });
 
+//Заявления
+//Мои заявления
+$app->get("/my-applications",
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($database, $session, $twig) {
+        if (!isClient($session,
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $query = $database->getConnection()->query(
+            "SELECT a.id, date_of_submission, status, comment
+                       FROM application a
+                       WHERE a.applicant_id = '".$session->getData("user")['user_id']."'
+                       ORDER BY a.date_of_submission DESC"
+        );
+        return renderPageByQuery($query, $session, $twig, $response,
+            "my-applications.twig", "applications");
+    });
+//Создать заявление
+$app->get('/create-application',
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($applications, $session) {
+        if (!isClient($session,
+            "Для этого действия необходимо в качестве пользователя")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        try {
+            $applications->create_application($session->getData("user")['user_id']);
+        } catch (ApplicationException $exception) {
+            $session->setData('message', $exception->getMessage());
+            return $response->withHeader('Location', '/my-applications')
+                ->withStatus(302);
+        }
+
+        return $response->withHeader('Location', '/my-applications')
+            ->withStatus(302);
+    });
+//Все необработанные заявления
+$app->get("/applications",
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($database, $session, $twig) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $query = $database->getConnection()->query(
+            "SELECT a.id, date_of_submission, status, comment,
+                       c.surname, c.given_name, c.patronymic
+                       FROM application a JOIN client c on a.applicant_id = c.id
+                       WHERE a.status = 'accepted'
+                       ORDER BY a.date_of_submission LIMIT 10"
+        );
+        return renderPageByQuery($query, $session, $twig, $response,
+            "applications.twig", "applications");
+    });
+//Рассмотреть заявление подробнее
+$app->get('/applications/{application_id}',
+    function (ServerRequestInterface $request,
+              ResponseInterface $response, $args) use ($database, $session, $twig) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $query = $database->getConnection()->query(
+            "SELECT a.id, a.date_of_submission, c.given_name, c.surname, c.patronymic, c.age,
+                                c.series, c.number, c.phone
+                       FROM application a JOIN client c on a.applicant_id = c.id
+                       WHERE a.id = {$args['application_id']}"
+        );
+        return renderPageByQuery($query, $session, $twig, $response,
+            "application_details.twig", "application", 1);
+    });
+//Обработать заявление
+$app->post('/edit-application/{application_id}',
+    function (ServerRequestInterface $request,
+              ResponseInterface $response, $args) use ($applications, $session) {
+        $params = (array)$request->getParsedBody();
+        try {
+            $applications->edit_application($params, $args['application_id']);
+        } catch (ApplicationException $exception) {
+            $session->setData('message', $exception->getMessage());
+            $session->setData('form', $params);
+            return $response->withHeader('Location', "/applications/{$args['application_id']}")
+                ->withStatus(302);
+        }
+
+        return $response->withHeader('Location', '/applications')
+            ->withStatus(302);
+    });
 
 //Завершить сессию
 $app->get('/logout',

@@ -10,6 +10,6 @@ $query = $database->getConnection()->query(
                         WHERE status = 'accepted' 
                         ORDER BY date_of_submission LIMIT $num, 10"
 );
-$news = $query->fetchAll();
+$applications = $query->fetchAll();
 
-echo json_encode($news,JSON_UNESCAPED_UNICODE);
+echo json_encode($applications,JSON_UNESCAPED_UNICODE);

@@ -1,6 +1,11 @@
 {% extends 'parts/base.twig' %}
 
 {% block body %}
+    {% if message is not null%}
+        <div class="alert alert-danger" role="alert">
+            {{ message }}
+        </div>
+    {% endif %}
     <div class="card">
         <div class="card-body align-content-center">
             <h1 class="card-title">Заявление №{{ application.id }}</h1>
@@ -19,7 +24,7 @@
             <form method="post" action="/edit-application/{{ application.id }}">
                 <div class="row mb-3">
                     <label for="comment" class="form-label">Комментарий</label>
-                    <textarea class="form-control" name="comment" id="comment" rows="3"></textarea>
+                    <textarea class="form-control" name="comment" id="comment" rows="3">{{ form ? form.comment }}</textarea>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios1"

@@ -32,7 +32,7 @@ function renderPageByQuery($query, $session, $twig, $response,
     $session->setData($name_form, $rows);
     $body = $twig->render($name_render_page, [
         "user" => $session->getData("user"),
-        "message" => $session->get_and_set_null("message"),
+        "message" => $session->flush("message"),
         $name_form => $session->flush($name_form)
     ]);
 

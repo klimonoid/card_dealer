@@ -19,12 +19,12 @@
             </a>
         {% else %}
             {% if user is not null and user.is_staff == false %}
-                <a href="" class="list-group-item list-group-item-action">Мои заявления</a>
+                <a href="/my-applications" class="list-group-item list-group-item-action">Мои заявления</a>
                 <a href="" class="list-group-item list-group-item-action">Мои договора</a>
                 <a href="" class="list-group-item list-group-item-action">Мои карты</a>
                 <a href="" class="list-group-item list-group-item-action">Мои счета</a>
             {% elseif user is not null and user.is_staff == true %}
-                <a href="" class="list-group-item list-group-item-action">Заявления</a>
+                <a href="/applications" class="list-group-item list-group-item-action">Заявления</a>
                 <a href="" class="list-group-item list-group-item-action">Договора</a>
                 <a href="" class="list-group-item list-group-item-action">Карты</a>
                 <a href="" class="list-group-item list-group-item-action">Счета</a>
