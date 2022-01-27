@@ -46,10 +46,15 @@ class ApplicationManagement
         if(strlen($params['comment']) > 255) {
             throw new ApplicationException('Ваш комментарий слишком длинный (Максимальный размер – 255 символов)');
         }
+        $this->database->getConnection()->query("
+            LOCK TABLES application WRITE;
+        ");
+//        sleep(15);
         $statement = $this->database->getConnection()->prepare(
             'UPDATE application SET status = :status, comment = :comment
                     WHERE id = :id'
         );
+        $this->database->getConnection()->query("UNLOCK TABLES;");
         $statement->execute([
             'status' => $status,
             'comment' => $params['comment'],
