@@ -16,7 +16,7 @@ CREATE TABLE client
 CREATE TABLE account
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    number INT NOT NULL,
+    number INT NULL,
     client_id INT NOT NULL REFERENCES client (id),
     open_date TIME NOT NULL,
     balance BIGINT NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE account
 CREATE TABLE card
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    number BIGINT NOT NULL,
+    number BIGINT NULL,
     client_id INT NOT NULL REFERENCES client (id),
     pin NUMERIC (6, 0),
     cvv NUMERIC (5, 0) NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE employee
 CREATE TABLE application
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    number BIGINT NOT NULL,
+    number BIGINT NULL,
     applicant_id INT NOT NULL REFERENCES client (id),
     date_of_submission TIME NOT NULL,
     status ENUM('accepted', 'approved', 'rejected') NOT NULL,
@@ -69,7 +69,7 @@ CREATE TABLE application
 CREATE TABLE contract
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    number BIGINT NOT NULL,
+    number BIGINT NULL,
     client_id INT NOT NULL REFERENCES client (id),
     application_id INT REFERENCES application (id),
     account_id INT REFERENCES account (id),
@@ -80,30 +80,74 @@ CREATE TABLE contract
     comment CHAR(255)
 );
 
+DELIMITER //
+
 CREATE TRIGGER account_num_trigger
     BEFORE INSERT ON account
     FOR EACH ROW
 BEGIN
-    SET @number = @id;
-END;
+    DECLARE tmp INT;
+    IF (NEW.number is null) THEN
+        -- determine next auto_increment value
+        SELECT AUTO_INCREMENT INTO tmp FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME = 'account';
+        -- and set the sort value to the same as the PK
+        SET NEW.number = tmp;
+    END IF;
+END
+
+//
+
+DELIMITER //
 
 CREATE TRIGGER card_num_trigger
     BEFORE INSERT ON card
     FOR EACH ROW
 BEGIN
-    SET @number = @id;
-END;
+    DECLARE tmp INT;
+    IF (NEW.number is null) THEN
+        -- determine next auto_increment value
+        SELECT AUTO_INCREMENT INTO tmp FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME = 'card';
+        -- and set the sort value to the same as the PK
+        SET NEW.number = tmp;
+    END IF;
+END
+
+//
+
+DELIMITER //
 
 CREATE TRIGGER application_num_trigger
     BEFORE INSERT ON application
     FOR EACH ROW
 BEGIN
-    SET @number = @id;
-END;
+    DECLARE tmp INT;
+    IF (NEW.number is null) THEN
+        -- determine next auto_increment value
+        SELECT AUTO_INCREMENT INTO tmp FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME = 'application';
+        -- and set the sort value to the same as the PK
+        SET NEW.number = tmp;
+    END IF;
+END
+
+//
+
+DELIMITER //
 
 CREATE TRIGGER contract_num_trigger
     BEFORE INSERT ON contract
     FOR EACH ROW
 BEGIN
-    SET @number = @id;
-END;
+    DECLARE tmp INT;
+    IF (NEW.number is null) THEN
+        -- determine next auto_increment value
+        SELECT AUTO_INCREMENT INTO tmp FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME = 'contract';
+        -- and set the sort value to the same as the PK
+        SET NEW.number = tmp;
+    END IF;
+END
+
+//
