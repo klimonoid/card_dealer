@@ -20,6 +20,8 @@ require __DIR__ . '/vendor/autoload.php';
 require_once "/Users/klim/PhpstormProjects/card_dealer/src/users/Authorization.php";
 require_once "/Users/klim/PhpstormProjects/card_dealer/src/users/AuthorizationException.php";
 require_once "/Users/klim/PhpstormProjects/card_dealer/src/general/utils.php";
+require_once "/Users/klim/PhpstormProjects/card_dealer/src/users/Editor.php";
+require_once "/Users/klim/PhpstormProjects/card_dealer/src/applicationManagement/ApplicationManagement.php";
 
 //Указываем, откуда подгружать шаблоны
 $loader = new FilesystemLoader('templates');
@@ -64,7 +66,7 @@ $app->get('/',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($twig, $session) {
 
         //Рендерим twig
-        $body = $twig->render('index.twig', [
+        $body = $twig->render('authorization/index.twig', [
             'user' => $session->getData('user'),
             'message' => $session->flush('message'),
             'form' => $session->flush('form'),
@@ -95,7 +97,7 @@ $app->post('/login-post',
 $app->get('/register',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($twig, $session) {
         //Рендерим twig
-        $body = $twig->render('register.twig', [
+        $body = $twig->render('authorization/register.twig', [
             'message' => $session->flush('message'),
             'form' => $session->flush('form'),
         ]);
@@ -150,7 +152,7 @@ $app->get('/delete-client',
 $app->get('/login-employee',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($twig, $session) {
         //Рендерим twig
-        $body = $twig->render('login-employee.twig', [
+        $body = $twig->render('authorization/login-employee.twig', [
             'message' => $session->flush('message'),
             'form' => $session->flush('form'),
         ]);
@@ -180,7 +182,7 @@ $app->post('/login-employee-post',
 $app->get('/register-employee',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($twig, $session) {
         //Рендерим twig
-        $body = $twig->render('register-employee.twig', [
+        $body = $twig->render('authorization/register-employee.twig', [
             'message' => $session->flush('message'),
             'form' => $session->flush('form'),
         ]);
@@ -244,7 +246,7 @@ $app->get("/my-applications",
                        ORDER BY a.date_of_submission DESC"
         );
         return renderPageByQuery($query, $session, $twig, $response,
-            "my-applications.twig", "applications");
+            "applications/my-applications.twig", "applications");
     });
 //Создать заявление
 $app->get('/create-application',
@@ -279,7 +281,7 @@ $app->get("/applications",
                        ORDER BY a.date_of_submission LIMIT 10"
         );
         return renderPageByQuery($query, $session, $twig, $response,
-            "applications.twig", "applications");
+            "applications/applications.twig", "applications");
     });
 //Рассмотреть заявление подробнее
 $app->get('/applications/{application_id}',
@@ -296,7 +298,7 @@ $app->get('/applications/{application_id}',
                        WHERE a.id = {$args['application_id']}"
         );
         return renderPageByQuery($query, $session, $twig, $response,
-            "application_details.twig", "application", 1);
+            "applications/application_details.twig", "application", 1);
     });
 //Обработать заявление
 $app->post('/edit-application/{application_id}',

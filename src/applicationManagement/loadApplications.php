@@ -1,5 +1,5 @@
 <?php
-require_once "/Users/klim/PhpstormProjects/card_dealer/src/getDatabaseConnection.php";
+require_once "/Users/klim/PhpstormProjects/card_dealer/src/general/getDatabaseConnection.php";
 
 $num = $_GET["num"];
 

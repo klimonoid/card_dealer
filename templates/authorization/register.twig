@@ -1,14 +1,14 @@
-{% extends 'parts/base.twig' %}
+{% extends '/parts/base.twig' %}
 
 {% block body %}
-    <h1>Регистрация сотрудника</h1>
+    <h1>Регистрация</h1>
 
     {% if message is not null%}
         <div class="alert alert-danger" role="alert">
             {{ message }}
         </div>
     {% endif %}
-    <form method="post" action="/register-employee-post">
+    <form method="post" action="/register-post">
         <div class="row mb-3">
             <div class="col">
                 <label for="surname" class="form-label">Фамилия</label>
@@ -31,6 +31,25 @@
                 <label for="age" class="form-label">Возраст</label>
                 <input type="text" name="age" class="form-control" id="age"
                        placeholder="69" value="{{ form ? form.age }}">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-auto">
+                <label for="Passport" class="col-sm-2 col-form-label">Паспорт:</label>
+            </div>
+            <div class="col-auto">
+                <label for="series" class="col-sm-2 col-form-label">Серия</label>
+            </div>
+            <div class="col-auto">
+                <input type="text" name="series" class="form-control" id="series"
+                       placeholder="4515" value="{{ form ? form.series }}">
+            </div>
+            <div class="col-auto">
+                <label for="number" class="col-sm-2 col-form-label">Номер</label>
+            </div>
+            <div class="col-auto">
+                <input type="text" name="number" class="form-control" id="number"
+                       placeholder="123456" value="{{ form ? form.number }}">
             </div>
         </div>
         <div class="row mb-3">

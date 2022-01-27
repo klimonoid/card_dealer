@@ -1,4 +1,4 @@
-{% extends 'parts/base.twig' %}
+{% extends '/parts/base.twig' %}
 
 {% block ajax %}
 
@@ -10,7 +10,7 @@
             $(window).scroll(function () {
                 if ($(window).scrollTop() + $(window).height() >= $(document).height() && !inProcess) {
                     $.ajax({
-                        url: "../../src/loadApplications.php",
+                        url: "../../src/applicationManagement/loadApplications.php",
                         method: "GET",
                         data: {"num": num},
                         beforeSend: function () {
