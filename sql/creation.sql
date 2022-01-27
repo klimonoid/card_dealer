@@ -76,7 +76,6 @@ CREATE TABLE contract
     inspector_id INT NULL REFERENCES employee (id),
     account_id INT REFERENCES account (id),
     card_id INT REFERENCES card (id),
-    employee_id INT REFERENCES employee (id),
     date_of_submission TIME,
     status ENUM ('ready', 'accepted', 'rejected') NOT NULL,
     comment CHAR(255)
