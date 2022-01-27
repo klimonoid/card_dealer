@@ -1,9 +1,9 @@
 <?php
 
-use App\ApplicationException;
-use App\ApplicationManagement;
-use App\Authorization;
-use App\AuthorizationException;
+use App\applicationManagement\ApplicationException;
+use App\applicationManagement\ApplicationManagement;
+use App\users\Authorization;
+use App\users\AuthorizationException;
 use App\Database;
 use App\Session;
 use Psr\Http\Message\ResponseInterface;
@@ -12,16 +12,11 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Factory\AppFactory;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
-use App\Editor;
+use App\users\Editor;
 
 //Подключаем composer
 require __DIR__ . '/vendor/autoload.php';
-
-require_once "/Users/klim/PhpstormProjects/card_dealer/src/users/Authorization.php";
-require_once "/Users/klim/PhpstormProjects/card_dealer/src/users/AuthorizationException.php";
 require_once "/Users/klim/PhpstormProjects/card_dealer/src/general/utils.php";
-require_once "/Users/klim/PhpstormProjects/card_dealer/src/users/Editor.php";
-require_once "/Users/klim/PhpstormProjects/card_dealer/src/applicationManagement/ApplicationManagement.php";
 
 //Указываем, откуда подгружать шаблоны
 $loader = new FilesystemLoader('templates');

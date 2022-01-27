@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App;
+namespace App\users;
+
+use App\Database;
+use App\Session;
 
 class Authorization
 {

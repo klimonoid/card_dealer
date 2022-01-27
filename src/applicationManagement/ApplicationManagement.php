@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App;
+namespace App\applicationManagement;
+
+use App\Database;
+use App\Session;
 
 class ApplicationManagement
 {
@@ -16,6 +19,7 @@ class ApplicationManagement
     /**
      * UserEditor constructor
      * @param Database $database
+     * @param Session $session
      */
     public function __construct(Database $database, Session $session)
     {
