@@ -1,0 +1,21 @@
+{% extends '/parts/base.twig' %}
+
+{% block body %}
+    <div class="card">
+        <div class="card-body align-content-center">
+            <h1 class="card-title">Договор №{{ contract.num }}</h1>
+            <p class="card-text">
+                <b>ФИО:</b> {{ contract.surname }} {{ contract.given_name }} {{ contract.patronymic }}
+                <br>
+                <b>Возраст:</b> {{ contract.age }}
+                <br>
+                <b>Паспорт:</b>
+                <br>
+                <b>Серия:</b> {{ contract.series }} <b>Номер:</b> {{ contract.number }}
+            </p>
+            <form method="post" action="/process-contract-post/{{ contract.id }}">
+                <button type="submit" class="btn btn-primary">Завершить обработку</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

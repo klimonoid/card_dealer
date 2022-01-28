@@ -1,0 +1,22 @@
+{% extends '/parts/base.twig' %}
+
+{% block body %}
+    <h1>Мои договора</h1>
+    <p>На этой странице вы можете посмотреть состояние ваших договоров</p>
+    <div id="applications-list">
+        {% for contract in contracts %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ contract.number }}</h5>
+                    <p class="card-text">
+                        <b>Статус:</b> {{ contract.status }}
+                        <br>
+                        <b>Создан по заявлению №{{ contract.application_id }}</b>
+                        <br>
+                        <b>Комментарий:</b> {{ contract.comment }}
+                    </p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
