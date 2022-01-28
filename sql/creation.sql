@@ -77,7 +77,7 @@ CREATE TABLE contract
     account_id INT REFERENCES account (id),
     card_id INT REFERENCES card (id),
     date_of_submission TIME,
-    status ENUM ('ready', 'accepted', 'rejected') NOT NULL,
+    status ENUM ('preparing', 'ready', 'accepted', 'rejected') NOT NULL,
     comment CHAR(255)
 );
 
