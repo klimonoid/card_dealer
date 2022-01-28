@@ -3,7 +3,7 @@
 {% block body %}
 
     {% if user is not null %}
-        <h1>Здравствуйте , {{ user.given_name|escape }}!</h1>
+        <h1>Здравствуйте, {{ user.given_name|escape }}!</h1>
         <p>На этой странице вы можете увидеть информацию о вас и изменить её</p>
         {% if message is not null%}
             <div class="alert alert-danger" role="alert">

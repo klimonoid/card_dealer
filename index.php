@@ -2,6 +2,7 @@
 
 use App\applicationManagement\ApplicationException;
 use App\applicationManagement\ApplicationManagement;
+use App\contracts\ContractManagement;
 use App\users\Authorization;
 use App\users\AuthorizationException;
 use App\Database;
@@ -54,6 +55,7 @@ $database = new Database($dsn, $username, $password);
 $authorization = new Authorization($database, $session);
 $editor = new Editor($database, $session);
 $applications = new ApplicationManagement($database, $session);
+$contracts = new ContractManagement($database, $session);
 
 //Обработчики:
 //Домашняя страница с логином и редакированием пользователя!!!!!
@@ -195,11 +197,11 @@ $app->post('/register-employee-post',
         } catch (AuthorizationException $exception) {
             $session->setData('message', $exception->getMessage());
             $session->setData('form', $params);
-            return $response->withHeader('Location', '/login-employee')
+            return $response->withHeader('Location', '/register-employee')
                 ->withStatus(302);
         }
 
-        return $response->withHeader('Location', '/')
+        return $response->withHeader('Location', '/login-employee')
             ->withStatus(302);
     });
 //Редактирование сотрудника
@@ -229,7 +231,8 @@ $app->get('/delete-employee',
 //Заявления
 //Мои заявления
 $app->get("/my-applications",
-    function (ServerRequestInterface $request, ResponseInterface $response) use ($database, $session, $twig) {
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use ($database, $session, $twig) {
         if (!isClient($session,
             "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
             return $response->withHeader("Location", "/")->withStatus(302);
@@ -238,7 +241,7 @@ $app->get("/my-applications",
             "SELECT a.id, date_of_submission, status, comment
                        FROM application a
                        WHERE a.applicant_id = '".$session->getData("user")['user_id']."'
-                       ORDER BY a.date_of_submission DESC"
+                       ORDER BY a.date_of_submission"
         );
         return renderPageByQuery($query, $session, $twig, $response,
             "applications/my-applications.twig", "applications");
@@ -298,20 +301,202 @@ $app->get('/applications/{application_id}',
 //Обработать заявление
 $app->post('/edit-application/{application_id}',
     function (ServerRequestInterface $request,
-              ResponseInterface $response, $args) use ($applications, $session) {
+              ResponseInterface $response, $args) use ($applications, $session, $contracts) {
         $params = (array)$request->getParsedBody();
         try {
-            $applications->edit_application($params, $args['application_id']);
+            $result = $applications->edit_application($params, $args['application_id']);
         } catch (ApplicationException $exception) {
             $session->setData('message', $exception->getMessage());
             $session->setData('form', $params);
             return $response->withHeader('Location', "/applications/{$args['application_id']}")
                 ->withStatus(302);
         }
+        if ($result == true) {
+            $contracts->create_contract($args['application_id']);
+        }
 
         return $response->withHeader('Location', '/applications')
             ->withStatus(302);
     });
+
+
+//Договора
+//Мои Договора
+$app->get("/my-contracts",
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use ($database, $session, $twig) {
+        if (!isClient($session,
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $query = $database->getConnection()->query(
+            "SELECT number, client_id, application_id, status, comment
+                       FROM contract
+                       WHERE client_id = '".$session->getData("user")['user_id']."'
+                       ORDER BY number DESC"
+        );
+        return renderPageByQuery($query, $session, $twig, $response,
+            "contracts/my-contracts.twig", "contracts");
+    });
+//Страница поиска договора по данным клиента
+$app->get('/contract-validation',
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($twig, $session) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $hueta = $session->getData('ready_to_sign_the_contract');
+        var_dump($hueta);
+        //Рендерим twig
+        $body = $twig->render('contracts/validation.twig', [
+            'user' => $session->getData('user'),
+            'message' => $session->flush('message'),
+            'form' => $session->flush('form'),
+        ]);
+        //Передаём twig на отрисовку
+        $response->getBody()->write($body);
+        return $response;
+    });
+//Валидируем пользователя, и ищем его договор
+$app->post('/find-contract',
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use($contracts, $database, $session) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+
+        $params = (array) $request->getParsedBody();
+
+        try {
+            $client_id = $contracts->validate_user($params['phone'], $params['password']);
+        } catch (AuthorizationException $exception) {
+            $session->setData('message', $exception->getMessage());
+            $session->setData('form', $params);
+            return $response->withHeader('Location', '/contract-validation')
+                ->withStatus(302);
+        }
+
+        return $response->withHeader('Location', '/contracts/' . $client_id)
+            ->withStatus(302);
+    });
+// Договор для подписания
+$app->get("/contracts/{client_id}",
+    function (ServerRequestInterface $request,
+              ResponseInterface $response, $args) use ($database, $session, $twig) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        if (!readyToSignTheContract($session,
+        "Клиент обязан подтвердить свою личность перед подписанием договора")) {
+            return $response->withHeader("Location", "/contract-validation")->withStatus(302);
+        }
+
+        $query = $database->getConnection()->query(
+        "SELECT cont.id, cont.number as num, c.surname, c.given_name, c.patronymic, c.series, c.number, c.age
+                        FROM contract cont JOIN client c on c.id = cont.client_id
+                        WHERE client_id = {$args['client_id']}
+                        AND status = 'ready'"
+        );
+
+        $rows = $query->fetch();
+
+        if ($rows == false) {
+            $session->setData("message", "Этот пользователь не имеет договоров, готовых к подписанию");
+            $session->flush('ready_to_sign_the_contract');
+            return $response->withHeader("Location", "/contract-validation")->withStatus(302);
+
+        }
+
+        $session->setData('contract', $rows);
+        $body = $twig->render('contracts/contract_details.twig', [
+            "user" => $session->getData("user"),
+            "message" => $session->flush("message"),
+            'contract' => $session->flush('contract')
+        ]);
+
+        var_dump($rows);
+
+        $response->getBody()->write($body);
+        return $response;
+    });
+// Все договоры со статусом preparing
+$app->get("/contracts",
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($database, $session, $twig) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $query = $database->getConnection()->query(
+            "SELECT cont.id, cont.number, status,
+                       c.surname, c.given_name, c.patronymic
+                       FROM contract cont JOIN client c on cont.client_id = c.id
+                       WHERE cont.status = 'preparing'
+                       ORDER BY cont.number LIMIT 10"
+        );
+        return renderPageByQuery($query, $session, $twig, $response,
+            "contracts/contracts.twig", "contracts");
+    });
+// Рассмотреть договор подробнее для обработки
+$app->get('/process-contract/{contract_id}',
+    function (ServerRequestInterface $request,
+              ResponseInterface $response, $args) use ($database, $session, $twig) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $query = $database->getConnection()->query(
+            "SELECT cont.id, cont.number as num, c.given_name, c.surname, c.patronymic, c.age,
+                                c.series, c.number
+                       FROM contract cont JOIN client c on cont.client_id = c.id
+                       WHERE cont.id = {$args['contract_id']}"
+        );
+        return renderPageByQuery($query, $session, $twig, $response,
+            "contracts/make_contract.twig", "contract", 1);
+    });
+//Обработать создание договора
+$app->post('/process-contract-post/{contract_id}',
+    function (ServerRequestInterface $request,
+              ResponseInterface $response, $args) use ($contracts, $session) {
+        try {
+            $contracts->fromPreparingToReady($args['contract_id']);
+        } catch (ApplicationException $exception) {
+            $session->setData('message', $exception->getMessage());
+            return $response->withHeader('Location', "/process-contract/{contract_id}")
+                ->withStatus(302);
+        }
+
+        return $response->withHeader('Location', '/contracts')
+            ->withStatus(302);
+    });
+//Обработать подписание договора
+$app->post('/contract-signing-post/{contract_id}',
+    function (ServerRequestInterface $request,
+              ResponseInterface $response, $args) use ($contracts, $session) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        if (!readyToSignTheContract($session,
+            "Клиент обязан подтвердить свою личность перед подписанием договора")) {
+            return $response->withHeader("Location", "/contract-validation")->withStatus(302);
+        }
+        $params = (array)$request->getParsedBody();
+        try {
+            $contracts->edit_contract($params, $args['contract_id'], $session->getData("user")['user_id']);
+        } catch (ApplicationException $exception) {
+            $session->setData('message', $exception->getMessage());
+            return $response->withHeader('Location', "/contracts/{contract_id}")
+                ->withStatus(302);
+        }
+
+        $session->flush('ready_to_sign_the_contract');
+
+        return $response->withHeader('Location', '/')
+            ->withStatus(302);
+    });
+
 
 //Завершить сессию
 $app->get('/logout',

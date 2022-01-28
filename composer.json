@@ -22,7 +22,8 @@
         "psr-4": {
             "App\\": "src/",
             "App\\applicationManager\\": "src/applicationManagement",
-            "App\\users\\": "src/users"
+            "App\\users\\": "src/users",
+            "App\\contracts\\": "src/contracts"
         }
     }
 }

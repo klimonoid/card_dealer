@@ -20,12 +20,17 @@
         {% else %}
             {% if user is not null and user.is_staff == false %}
                 <a href="/my-applications" class="list-group-item list-group-item-action">Мои заявления</a>
-                <a href="" class="list-group-item list-group-item-action">Мои договора</a>
+                <a href="/my-contracts" class="list-group-item list-group-item-action">Мои договора</a>
                 <a href="" class="list-group-item list-group-item-action">Мои карты</a>
                 <a href="" class="list-group-item list-group-item-action">Мои счета</a>
             {% elseif user is not null and user.is_staff == true %}
                 <a href="/applications" class="list-group-item list-group-item-action">Заявления</a>
-                <a href="" class="list-group-item list-group-item-action">Договора</a>
+                <a class="dropdown-toggle list-group-item list-group-item-action" id="Show_receipt"
+                   data-bs-toggle="dropdown" aria-expanded="false">Договора</a>
+                <ul class="dropdown-menu" aria-labelledby="Show_receipt">
+                    <li><a class="dropdown-item" href="/contracts">На подготовку</a></li>
+                    <li><a class="dropdown-item" href="/contract-validation">Подписать договор</a></li>
+                </ul>
                 <a href="" class="list-group-item list-group-item-action">Карты</a>
                 <a href="" class="list-group-item list-group-item-action">Счета</a>
             {% endif %}

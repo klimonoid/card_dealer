@@ -20,6 +20,16 @@ function isClient($session, $message): bool
     return true;
 }
 
+function readyToSignTheContract($session, $message): bool
+{
+    if ($session->getData("ready_to_sign_the_contract") == null or
+        $session->getData("ready_to_sign_the_contract") != true) {
+        $session->setData("message", $message);
+        return false;
+    }
+    return true;
+}
+
 function renderPageByQuery($query, $session, $twig, $response,
                            $name_render_page, $name_form = "form", $need_one = 0): ResponseInterface
 {
@@ -28,6 +38,10 @@ function renderPageByQuery($query, $session, $twig, $response,
     } else {
         $rows = $query->fetchAll();
     }
+
+//    if ($rows == false) {
+//        return $response->withStatus(404);
+//    }
 
     $session->setData($name_form, $rows);
     $body = $twig->render($name_render_page, [
