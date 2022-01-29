@@ -1,0 +1,28 @@
+{% extends '/parts/base.twig' %}
+
+{% block body %}
+    {% if message is not null%}
+        <div class="alert alert-danger" role="alert">
+            {{ message }}
+        </div>
+    {% endif %}
+    <div class="card">
+        <div class="card-body align-content-center">
+            <h1 class="card-title">Карта №{{ card.number }}</h1>
+            <p class="card-text">
+                <b>Владелец:</b> {{ card.surname }} {{ card.given_name }}
+                <br>
+                <b>ПИН:</b> {{ card.pin }}
+                <br>
+                <b>CVV код:</b> {{ card.cvv }}
+                <br>
+                <b>Обслуживается до:</b> {{ card.service_end_date }}
+                <br>
+                Сверьте данные карты с данными предоставленными на экране
+            </p>
+            <form method="post" action="/process-card-post/{{ card.id }}">
+                <button type="submit" class="btn btn-primary">Карта в отделении</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

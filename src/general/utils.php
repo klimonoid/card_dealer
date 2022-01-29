@@ -30,6 +30,16 @@ function readyToSignTheContract($session, $message): bool
     return true;
 }
 
+function readyToGetCard($session, $message): bool
+{
+    if ($session->getData("ready_to_get_card") == null or
+        $session->getData("ready_to_get_card") != true) {
+        $session->setData("message", $message);
+        return false;
+    }
+    return true;
+}
+
 function renderPageByQuery($query, $session, $twig, $response,
                            $name_render_page, $name_form = "form", $need_one = 0): ResponseInterface
 {

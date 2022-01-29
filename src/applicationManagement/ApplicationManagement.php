@@ -27,8 +27,26 @@ class ApplicationManagement
         $this->session = $session;
     }
 
+    /**
+     * @throws ApplicationException
+     */
     public function create_application($client_id)
     {
+        $statement = $this->database->getConnection()->prepare(
+            'SELECT *
+                       FROM application
+                       WHERE applicant_id = :client_id AND status = :accepted'
+        );
+        $statement->execute([
+            'client_id' => $client_id,
+            'accepted' => 'accepted'
+        ]);
+        $application = $statement->fetch();
+        if ($application != false) {
+            throw new ApplicationException(
+                'Вы не можете создать новое заявление пока мы не обработаем ваше старое'
+            );
+        }
         $statement = $this->database->getConnection()->prepare(
             'INSERT INTO application 
                     (applicant_id, date_of_submission, status, comment)

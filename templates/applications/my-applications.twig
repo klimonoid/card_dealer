@@ -4,6 +4,11 @@
     <h1>Мои заявления</h1>
     <p>На этой странице вы можете создать новое заявление на получении карты,
     а также посмотреть статус уже созданных</p>
+    {% if message is not null%}
+        <div class="alert alert-danger" role="alert">
+            {{ message }}
+        </div>
+    {% endif %}
     <div class="row mb-3">
         <div class="d-flex justify-content-end">
             <a class="btn btn-primary" href="/create-application">Создать заявление</a>

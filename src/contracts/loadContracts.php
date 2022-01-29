@@ -13,6 +13,6 @@ $query = $database->getConnection()->query(
                        WHERE cont.status = 'preparing'
                        ORDER BY cont.number LIMIT $num, 10"
 );
-$applications = $query->fetchAll();
+$contracts = $query->fetchAll();
 
-echo json_encode($applications,JSON_UNESCAPED_UNICODE);
+echo json_encode($contracts,JSON_UNESCAPED_UNICODE);

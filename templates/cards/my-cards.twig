@@ -1,0 +1,25 @@
+{% extends '/parts/base.twig' %}
+
+{% block body %}
+    <h1>Мои карты</h1>
+    <p>На этой странице вы можете посмотреть состояние ваших карт</p>
+    <div id="applications-list">
+        {% for card in cards %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ card.number }}</h5>
+                    <p class="card-text">
+                        <b>ПИН:</b> {{ card.pin }}
+                        <br>
+                        <b>CVV код:</b> {{ card.cvv }}
+                        <br>
+                        <b>Обслуживается до:</b> {{ card.service_end_date }}
+                        <br>
+                        <b>Статус:</b> {{ card.status }}
+                        <br>
+                    </p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

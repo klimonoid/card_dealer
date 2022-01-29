@@ -52,35 +52,6 @@ class ContractManagement
         ]);
     }
 
-//    /**
-//     * @throws ApplicationException
-//     */
-//    public function edit_application($params, $application_id)
-//    {
-//        $status = 'approved';
-//        if ($params['exampleRadios'] == 'rejected') {
-//            $status = 'rejected';
-//        }
-//        if(strlen($params['comment']) > 255) {
-//            throw new ApplicationException(
-//                'Ваш комментарий слишком длинный' .
-//                '(Максимальный размер – 255 символов)'
-//            );
-//        }
-//        $this->database->getConnection()->query("
-//            LOCK TABLES application WRITE;
-//        ");
-////        sleep(15);
-//        $statement = $this->database->getConnection()->prepare(
-//            'UPDATE application SET
-//                    inspector_id = :inspector_id, status = :status, comment = :comment
-//                    WHERE id = :id'
-//        );
-//        if ($status == 'approved') {
-//            // Создаём договор
-//        }
-//        $this->database->getConnection()->query("UNLOCK TABLES;");
-//    }
     /**
      * @throws AuthorizationException
      */
@@ -133,7 +104,7 @@ class ContractManagement
     /**
      * @throws ContractException
      */
-    public function edit_contract($params, $contract_id, $inspector_id)
+    public function edit_contract($params, $contract_id, $inspector_id): bool
     {
         $status = 'accepted';
         if ($params['exampleRadios'] == 'rejected') {
@@ -162,5 +133,9 @@ class ContractManagement
             'comment' => $params['comment'],
             'id' => $contract_id
         ]);
+        if ($status == 'accepted') {
+            return true;
+        }
+        return false;
     }
 }

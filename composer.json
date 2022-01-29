@@ -23,7 +23,8 @@
             "App\\": "src/",
             "App\\applicationManager\\": "src/applicationManagement",
             "App\\users\\": "src/users",
-            "App\\contracts\\": "src/contracts"
+            "App\\contracts\\": "src/contracts",
+            "App\\cardsAndAccounts": "src/cardsAndAccounts"
         }
     }
 }

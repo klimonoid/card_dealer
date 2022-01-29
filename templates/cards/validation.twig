@@ -1,0 +1,30 @@
+{% extends '/parts/base.twig' %}
+
+{% block body %}
+    <h1>Поиск карты</h1>
+    <p>Для подтверждения личности клиент должен ввести свой
+        номер мобильного телефона и пароль от личного кабинета</p>
+
+    {% if message is not null%}
+        <div class="alert alert-danger" role="alert">
+            {{ message }}
+        </div>
+    {% endif %}
+
+    <form method="post" action="/find-card">
+        <div class="row mb-3">
+            <div class="col-auto">
+                <label for="phone" class="form-label">Телефон</label>
+                <input type="text" name="phone" class="form-control" id="phone" placeholder="+79261234567"
+                       value="{{ form ? form.phone }}">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-auto">
+                <label for="password" class="form-label">Пароль</label>
+                <input type="password" name="password" class="form-control" id="password">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Найти</button>
+    </form>
+{% endblock %}

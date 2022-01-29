@@ -1,0 +1,30 @@
+{% extends '/parts/base.twig' %}
+
+{% block body %}
+    <h1>Мои счета</h1>
+    <p>На этой странице вы можете посмотреть состояние ваших счетов</p>
+    <div id="applications-list">
+        {% for account in accounts %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ account.number }}</h5>
+                    <p class="card-text">
+                        <b>Корреспондентский счёт:</b> {{ account.correspondent_account }}
+                        <br>
+                        <b>БИК:</b>: {{ account.bic }}
+                        <br>
+                        <b>ИНН:</b>: {{ account.inn }}
+                        <br>
+                        <b>КПП:</b>: {{ account.kpp }}
+                        <br>
+                        <b>Дата открытия:</b> {{ account.open_date }}
+                        <br>
+                        <b>Баланс:</b>: {{ account.balance }}
+                        <br>
+                        <b>Статус:</b> {{ account.status }}
+                    </p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

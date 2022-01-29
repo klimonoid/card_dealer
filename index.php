@@ -2,6 +2,9 @@
 
 use App\applicationManagement\ApplicationException;
 use App\applicationManagement\ApplicationManagement;
+use App\cardsAndAccounts\CardException;
+use App\cardsAndAccounts\CardsAndAccountsManagement;
+use App\contracts\ContractException;
 use App\contracts\ContractManagement;
 use App\users\Authorization;
 use App\users\AuthorizationException;
@@ -56,6 +59,7 @@ $authorization = new Authorization($database, $session);
 $editor = new Editor($database, $session);
 $applications = new ApplicationManagement($database, $session);
 $contracts = new ContractManagement($database, $session);
+$cards_n_accounts = new CardsAndAccountsManagement($database, $session);
 
 //Обработчики:
 //Домашняя страница с логином и редакированием пользователя!!!!!
@@ -405,8 +409,8 @@ $app->get("/contracts/{client_id}",
         if ($rows == false) {
             $session->setData("message", "Этот пользователь не имеет договоров, готовых к подписанию");
             $session->flush('ready_to_sign_the_contract');
-            return $response->withHeader("Location", "/contract-validation")->withStatus(302);
-
+            return $response->withHeader("Location", "/contract-validation")
+                ->withStatus(302);
         }
 
         $session->setData('contract', $rows);
@@ -473,25 +477,258 @@ $app->post('/process-contract-post/{contract_id}',
 //Обработать подписание договора
 $app->post('/contract-signing-post/{contract_id}',
     function (ServerRequestInterface $request,
-              ResponseInterface $response, $args) use ($contracts, $session) {
+              ResponseInterface $response, $args) use ($cards_n_accounts, $database, $contracts, $session) {
         if (!isEmployee($session,
             "Для доступа к этой информации необходимо быть сотрудником")) {
             return $response->withHeader("Location", "/")->withStatus(302);
         }
         if (!readyToSignTheContract($session,
             "Клиент обязан подтвердить свою личность перед подписанием договора")) {
-            return $response->withHeader("Location", "/contract-validation")->withStatus(302);
+            return $response->withHeader(
+                "Location",
+                "/contract-validation"
+            )->withStatus(302);
         }
         $params = (array)$request->getParsedBody();
         try {
-            $contracts->edit_contract($params, $args['contract_id'], $session->getData("user")['user_id']);
-        } catch (ApplicationException $exception) {
+            $result = $contracts->edit_contract(
+                $params,
+                $args['contract_id'],
+                $session->getData("user")['user_id']
+            );
+        } catch (ContractException $exception) {
             $session->setData('message', $exception->getMessage());
-            return $response->withHeader('Location', "/contracts/{contract_id}")
+            $statement = $database->getConnection()->prepare(
+                'SELECT client.id FROM client JOIN contract on contract.client_id = client.id
+                            WHERE contract.id = :contract_id'
+            );
+            $statement->execute([
+                'contract_id' => $args['contract_id']
+            ]);
+            $client_id = $statement->fetch()['id'];
+            return $response->withHeader('Location', "/contracts/" . $client_id)
                 ->withStatus(302);
         }
 
         $session->flush('ready_to_sign_the_contract');
+
+        if ($result == true) {
+            $cards_n_accounts->create_card_and_account($args['contract_id']);
+        }
+
+        return $response->withHeader('Location', '/')
+            ->withStatus(302);
+    });
+
+
+//Cчета
+//Мои Счета
+$app->get("/my-accounts",
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use ($database, $session, $twig) {
+        if (!isClient($session,
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $query = $database->getConnection()->query(
+            "SELECT number, correspondent_account, bic, inn, kpp, open_date, balance, status
+                       FROM account
+                       WHERE client_id = '".$session->getData("user")['user_id']."'
+                       ORDER BY number DESC"
+        );
+        return renderPageByQuery($query, $session, $twig, $response,
+            "accounts/my-accounts.twig", "accounts");
+    });
+
+
+//Карты
+//Мои Карты
+$app->get("/my-cards",
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use ($database, $session, $twig) {
+        if (!isClient($session,
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $query = $database->getConnection()->query(
+            "SELECT number, pin, cvv, service_end_date, status
+                       FROM card
+                       WHERE client_id = '".$session->getData("user")['user_id']."'
+                       ORDER BY number DESC"
+        );
+        return renderPageByQuery($query, $session, $twig, $response,
+            "cards/my-cards.twig", "cards");
+    });
+// Все карты со статусом preparing
+$app->get("/cards",
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($database, $session, $twig) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $query = $database->getConnection()->query(
+            "SELECT card.id, card.number,
+                       c.surname, c.given_name, c.patronymic
+                       FROM card JOIN client c on card.client_id = c.id
+                       WHERE card.status = 'preparing'
+                       ORDER BY card.id LIMIT 10"
+        );
+        return renderPageByQuery($query, $session, $twig, $response,
+            "cards/cards.twig", "cards");
+    });
+// Рассмотреть карту подробнее для обработки
+$app->get('/cards/{card_id}',
+    function (ServerRequestInterface $request,
+              ResponseInterface $response, $args) use ($database, $session, $twig) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $query = $database->getConnection()->query(
+            "SELECT card.id, card.number, pin, cvv, service_end_date, c.surname, c.given_name
+                       FROM card JOIN client c on card.client_id = c.id
+                       WHERE card.id = {$args['card_id']}"
+        );
+        return renderPageByQuery($query, $session, $twig, $response,
+            "cards/card-details.twig", "card", 1);
+    });
+//Обработать приезд карты
+$app->post('/process-card-post/{card_id}',
+    function (ServerRequestInterface $request,
+              ResponseInterface $response, $args) use ($cards_n_accounts, $session) {
+        try {
+            $cards_n_accounts->fromPreparingToReady($args['card_id']);
+        } catch (ApplicationException $exception) {
+            $session->setData('message', $exception->getMessage());
+            return $response->withHeader('Location', "/process-contract/{contract_id}")
+                ->withStatus(302);
+        }
+
+        return $response->withHeader('Location', '/cards')
+            ->withStatus(302);
+    });
+//Страница поиска карты по данным клиента
+$app->get('/card-validation',
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($twig, $session) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        $hueta = $session->getData('ready_to_get_card');
+        var_dump($hueta);
+        //Рендерим twig
+        $body = $twig->render('cards/validation.twig', [
+            'user' => $session->getData('user'),
+            'message' => $session->flush('message'),
+            'form' => $session->flush('form'),
+        ]);
+        //Передаём twig на отрисовку
+        $response->getBody()->write($body);
+        return $response;
+    });
+//Валидируем пользователя, и ищем его карту
+$app->post('/find-card',
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use($cards_n_accounts, $database, $session) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+
+        $params = (array) $request->getParsedBody();
+
+        try {
+            $client_id = $cards_n_accounts->validate_user($params['phone'], $params['password']);
+        } catch (AuthorizationException $exception) {
+            $session->setData('message', $exception->getMessage());
+            $session->setData('form', $params);
+            return $response->withHeader('Location', '/card-validation')
+                ->withStatus(302);
+        }
+
+        return $response->withHeader('Location', '/get-card/' . $client_id)
+            ->withStatus(302);
+    });
+// Карта для выдачи
+$app->get("/get-card/{client_id}",
+    function (ServerRequestInterface $request,
+              ResponseInterface $response, $args) use ($database, $session, $twig) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        if (!readyToGetCard($session,
+            "Клиент обязан подтвердить свою личность перед получением карты")) {
+            return $response->withHeader("Location", "/card-validation")->withStatus(302);
+        }
+
+        $statement = $database->getConnection()->prepare(
+            "SELECT card.id, card.number as num, cvv, service_end_date,
+                                c.surname,c.given_name, c.patronymic, c.series, c.number, c.age
+                        FROM card JOIN client c on card.client_id = c.id
+                        WHERE (client_id = :client_id  AND status = :ready)"
+        );
+        $statement->execute([
+            'client_id' => $args['client_id'],
+            'ready' => 'ready'
+        ]);
+        $rows = $statement->fetch();
+
+        if ($rows == false) {
+            $session->setData("message", "Этот пользователь не имеет карт, готовых к выдаче");
+            $session->flush('ready_to_get_card');
+            return $response->withHeader("Location", "/card-validation")->withStatus(302);
+        }
+
+        $session->setData('card', $rows);
+        $body = $twig->render('cards/give_card.twig', [
+            "user" => $session->getData("user"),
+            "message" => $session->flush("message"),
+            'card' => $session->flush('card')
+        ]);
+
+        var_dump($rows);
+
+
+        $response->getBody()->write($body);
+        return $response;
+    });
+//Обработать выдачу карты
+$app->post('/card-giving-post/{card_id}',
+    function (ServerRequestInterface $request,
+              ResponseInterface $response, $args) use ($cards_n_accounts, $database, $session) {
+        if (!isEmployee($session,
+            "Для доступа к этой информации необходимо быть сотрудником")) {
+            return $response->withHeader("Location", "/")->withStatus(302);
+        }
+        if (!readyToGetCard($session,
+            "Клиент обязан подтвердить свою личность перед подписанием договора")) {
+            return $response->withHeader(
+                "Location",
+                "/card-validation"
+            )->withStatus(302);
+        }
+        $params = (array)$request->getParsedBody();
+        try {
+            $cards_n_accounts->edit_card_and_account(
+                $params,
+                $args['card_id']
+            );
+        } catch (CardException $exception) {
+            $session->setData('message', $exception->getMessage());
+            $statement = $database->getConnection()->prepare(
+                'SELECT client.id FROM client JOIN card on card.client_id = client.id
+                            WHERE card.id = :card_id'
+            );
+            $statement->execute([
+                'card_id' => $args['card_id']
+            ]);
+            $client_id = $statement->fetch()['id'];
+            return $response->withHeader('Location', "/get-card/" . $client_id)
+                ->withStatus(302);
+        }
+
+        $session->flush('ready_to_get_card');
 
         return $response->withHeader('Location', '/')
             ->withStatus(302);

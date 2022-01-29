@@ -10,7 +10,7 @@
             $(window).scroll(function () {
                 if ($(window).scrollTop() + $(window).height() >= $(document).height() && !inProcess) {
                     $.ajax({
-                        url: "../../src/contracts/loadContracts",
+                        url: "../../src/cardsAndAccounts/loadCards.php",
                         method: "GET",
                         data: {"num": num},
                         beforeSend: function () {
@@ -21,23 +21,23 @@
                         console.log(data)
                         if (data.length > 0) {
                             $.each(data, function (index, data) {
-                                $("#contracts-list").append(
+                                $("#cards-list").append(
                                     "<div class=\"card mb-3\">" +
                                     "<div class=\"container mt-1 mb-1\">" +
                                     "<div class=\"row align-items-center\">" +
-                                    "<div class=\"col-1 align-content-center\">" +
+                                    "<div class=\"col-3 align-content-center\">" +
                                     "<b>" + data.number + "</b>" +
                                     "</div>" +
                                     "<div class=\"col align-content-center\">" +
-                                    " <b>Клиент:</b> " +
+                                    " <b>Заявитель:</b> " +
                                     data.surname + " " +
                                     data.given_name + " " +
                                     data.patronymic +
                                     "</div>" +
                                     "<div class=\"col-3 align-content-center\">" +
                                     "<div class=\"d-flex justify-content-end\">" +
-                                    "<a class=\"btn btn-outline-primary\" href=\"/process-contract/" + data.id + "\">" +
-                                    "Подготовить</a>" +
+                                    "<a class=\"btn btn-outline-primary\" href=\"/cards/" + data.id + "\">" +
+                                    "Подробнее</a>" +
                                     "</div>" +
                                     "</div>" +
                                     "</div>" +
@@ -57,26 +57,26 @@
 {% endblock %}
 
 {% block body %}
-    <h1>Договора</h1>
-    <p>На этой странице представлен список всех необработанных договоров</p>
-    <div id="contracts-list">
-        {% for contract in contracts %}
+    <h1>Карты</h1>
+    <p>На этой странице представлен список всех карт, которые должны приехать в отделение</p>
+    <div id="cards-list">
+        {% for card in cards %}
             <div class="card mb-3">
                 <div class="container mt-1 mb-1">
                     <div class="row align-items-center">
-                        <div class="col-1 align-content-center">
-                            <b>{{ contract.number }}</b>
+                        <div class="col-3 align-content-center">
+                            <b>{{ card.number }}</b>
                         </div>
                         <div class="col align-content-center">
-                            <b>Клиент:</b>
-                            {{ contract.surname }}
-                            {{ contract.given_name }}
-                            {{ contract.patronymic }}
+                            <b>Заявитель:</b>
+                            {{ card.surname }}
+                            {{ card.given_name }}
+                            {{ card.patronymic }}
                         </div>
                         <div class="col-3 align-content-center">
                             <div class="d-flex justify-content-end">
-                                <a class="btn btn-outline-primary" href="/process-contract/{{ contract.id }}">
-                                    Подготовить</a>
+                                <a class="btn btn-outline-primary" href="/cards/{{ card.id }}">
+                                    Подробнее</a>
                             </div>
                         </div>
                     </div>
