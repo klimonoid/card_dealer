@@ -16,30 +16,26 @@ CREATE TABLE client
 CREATE TABLE account
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    number INT NULL,
-    client_id INT NOT NULL REFERENCES client (id),
+    number NUMERIC (20, 0) NOT NULL, # 408 17 810 5 6200 ХХХХХХХ
+    correspondent_account NUMERIC (20, 0) NOT NULL DEFAULT 30101810400000000225,
+    bic NUMERIC (9, 0) NOT NULL DEFAULT 044525225,
+    inn NUMERIC (12, 0) NOT NULL, # 7707 XXXXXX 00
+    kpp NUMERIC (9, 0) NOT NULL DEFAULT 770743001,
     open_date TIME NOT NULL,
     balance BIGINT NOT NULL,
-    country_code INT NOT NULL,
-    region_code INT NOT NULL,
-    division_code INT NOT NULL,
-    credit_institution_number INT NOT NULL,
-    correspondent_account NUMERIC (22, 0) NOT NULL,
-    city CHAR(30) NOT NULL,
-    street CHAR(50) NOT NULL,
-    house INT NOT NULL,
-    building INT
+    client_id INT NOT NULL REFERENCES client (id),
+    status ENUM ('frozen', 'working') NOT NULL
 );
 
 CREATE TABLE card
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    number BIGINT NULL,
-    client_id INT NOT NULL REFERENCES client (id),
-    pin NUMERIC (6, 0),
-    cvv NUMERIC (5, 0) NOT NULL,
+    number NUMERIC (16, 0) NOT NULL, # 5469 38XX XXXX XXX7
+    pin NUMERIC (4, 0),
+    cvv NUMERIC (3, 0) NOT NULL,
     service_end_date TIME NOT NULL,
-    lost BOOLEAN,
+    status ENUM ('preparing', 'ready', 'working', 'lost') NOT NULL,
+    client_id INT NOT NULL REFERENCES client (id),
     account_id INT NOT NULL REFERENCES account (id)
 );
 
@@ -54,12 +50,10 @@ CREATE TABLE employee
     password CHAR(100) NOT NULL
 );
 
-# CHECK (0 < age AND age < 120)
-
 CREATE TABLE application
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    number BIGINT NULL,
+    number BIGINT UNSIGNED NULL,
     applicant_id INT NOT NULL REFERENCES client (id),
     inspector_id INT NULL REFERENCES employee (id),
     date_of_submission TIME NOT NULL,
@@ -70,7 +64,7 @@ CREATE TABLE application
 CREATE TABLE contract
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    number BIGINT NULL,
+    number BIGINT UNSIGNED NULL,
     client_id INT NOT NULL REFERENCES client (id),
     application_id INT NOT NULL REFERENCES application (id),
     inspector_id INT NULL REFERENCES employee (id),
@@ -93,7 +87,8 @@ BEGIN
         SELECT AUTO_INCREMENT INTO tmp FROM information_schema.TABLES
         WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME = 'account';
         -- and set the sort value to the same as the PK
-        SET NEW.number = tmp;
+        SET NEW.number = 40817810562000000000 + tmp;
+        SET NEW.inn = 770700000000 + tmp * 100;
     END IF;
 END
 
@@ -111,7 +106,8 @@ BEGIN
         SELECT AUTO_INCREMENT INTO tmp FROM information_schema.TABLES
         WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME = 'card';
         -- and set the sort value to the same as the PK
-        SET NEW.number = tmp;
+        SET NEW.number = 5469380000000007 + tmp * 10;
+        SET NEW.cvv = 1 + (RAND() * 998);
     END IF;
 END
 
