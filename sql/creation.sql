@@ -10,7 +10,8 @@ CREATE TABLE client
     series INT NOT NULL,
     number INT NOT NULL,
     phone CHAR(20) UNIQUE NOT NULL,
-    password CHAR(100) NOT NULL
+    password CHAR(100) NOT NULL,
+    password_cookie_token VARCHAR(255) NULL
 );
 
 CREATE TABLE account
@@ -47,7 +48,8 @@ CREATE TABLE employee
     patronymic CHAR(40),
     age INT NOT NULL,
     phone CHAR(20) UNIQUE NOT NULL,
-    password CHAR(100) NOT NULL
+    password CHAR(100) NOT NULL,
+    password_cookie_token VARCHAR(255) NULL
 );
 
 CREATE TABLE application

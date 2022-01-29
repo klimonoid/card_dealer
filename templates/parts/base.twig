@@ -15,34 +15,6 @@
             integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
             crossorigin="anonymous"></script>
 
-    <script type="text/javascript">
-        function idleTimer() {
-            var t;
-            // window.onload = resetTimer;
-            window.onmousemove = resetTimer;
-            window.onmousedown = resetTimer;
-            window.onclick = resetTimer;
-            window.onscroll = resetTimer;
-            window.onkeydown = resetTimer;
-
-            function logout() {
-                window.location.href = '/logout';
-                window.location.href = '/';
-                alert( "Мы вышли из системы, так как вы отошли" );
-            }
-
-            function reload() {
-                window.location = self.location.href;
-            }
-
-            function resetTimer() {
-                clearTimeout(t);
-                t = setTimeout(logout, 120000);
-                t= setTimeout(reload, 120000);
-            }
-        }
-        idleTimer();
-    </script>
     {% block ajax %}{% endblock %}
 </head>
 <body>

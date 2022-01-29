@@ -35,18 +35,6 @@ $app->addBodyParsingMiddleware(); //Для работы с POST
 $app->addRoutingMiddleware();
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
-$session = new Session();
-$sessionMiddleware = function (ServerRequestInterface $request,
-                               RequestHandlerInterface $handler) use($session) {
-    $session->start();
-    $response = $handler->handle($request);
-
-    $session->save();
-    return $response;
-};
-
-$app->add($sessionMiddleware);
-
 //Работа с БД
 $config = include_once 'config/database.php';
 $dsn = $config['dsn'];
@@ -54,6 +42,66 @@ $username = $config['username'];
 $password = $config['password'];
 
 $database = new Database($dsn, $username, $password);
+
+$session = new Session();
+$sessionMiddleware = function (ServerRequestInterface $request,
+                               RequestHandlerInterface $handler) use($session, $database) {
+    $session->start();
+
+    if(isset($_COOKIE["password_cookie_token"]) && !empty($_COOKIE["password_cookie_token"])){
+        $query = $database->getConnection()->query(
+            "SELECT *
+                           FROM client
+                           WHERE password_cookie_token = '".$_COOKIE["password_cookie_token"]."'");
+        $select_user_data = $query->fetch();
+        if(!$select_user_data){
+            $query = $database->getConnection()->query(
+                "SELECT *
+                           FROM employee
+                           WHERE password_cookie_token = '".$_COOKIE["password_cookie_token"]."'");
+            $select_user_data = $query->fetch();
+            if(!$select_user_data) {
+                var_dump('SOMETHING WENT WRONG!');
+            } else {
+                $session->setData('user', [
+                    'user_id' => $select_user_data['id'],
+                    'given_name' => $select_user_data['given_name'],
+                    'phone' => $select_user_data['phone'],
+                    'is_staff' => true,
+                ]);
+            }
+        } else {
+            $session->setData('user', [
+                'user_id' => $select_user_data['id'],
+                'given_name' => $select_user_data['given_name'],
+                'phone' => $select_user_data['phone'],
+                'is_staff' => false,
+            ]);
+        }
+    }
+
+    $session_timeout = 120; // in seconds
+    if (!isset($_SESSION['last_visit'])) {
+        $_SESSION['last_visit'] = time();
+    }
+    if((!isset($_COOKIE["password_cookie_token"]) || empty($_COOKIE["password_cookie_token"]))
+        && isset($_SESSION['user'])
+        && ((time() - $_SESSION['last_visit']) > $session_timeout))
+    {
+        unset($_SESSION['last_visit']);
+        unset($_SESSION['user']);
+        header("Location: /logout");
+        exit;
+    }
+    $_SESSION['last_visit'] = time();
+
+    $response = $handler->handle($request);
+
+    $session->save();
+    return $response;
+};
+
+$app->add($sessionMiddleware);
 
 $authorization = new Authorization($database, $session);
 $editor = new Editor($database, $session);
@@ -81,9 +129,12 @@ $app->get('/',
 $app->post('/login-post',
     function (ServerRequestInterface $request, ResponseInterface $response) use($authorization, $session) {
         $params = (array) $request->getParsedBody();
-
+        $remember_me = "off";
+        if (isset($params["Remember_me"])){
+            $remember_me = "on";
+        }
         try {
-            $authorization->login($params['phone'], $params['password']);
+            $authorization->login($params['phone'], $params['password'], $remember_me);
         } catch (AuthorizationException $exception) {
             $session->setData('message', $exception->getMessage());
             $session->setData('form', $params);
@@ -109,7 +160,8 @@ $app->get('/register',
     });
 //Зарегистрировать клиента
 $app->post('/register-post',
-    function (ServerRequestInterface $request, ResponseInterface $response) use ($authorization, $session) {
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use ($authorization, $session) {
         $params = (array)$request->getParsedBody();
         try {
             $authorization->register($params);
@@ -164,11 +216,17 @@ $app->get('/login-employee',
     });
 //Залогинить сотрудника
 $app->post('/login-employee-post',
-    function (ServerRequestInterface $request, ResponseInterface $response) use($authorization, $session) {
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use($authorization, $session) {
         $params = (array) $request->getParsedBody();
 
+        $remember_me = "off";
+        if (isset($params["Remember_me"])){
+            $remember_me = "on";
+        }
+
         try {
-            $authorization->login_employee($params['phone'], $params['password']);
+            $authorization->login_employee($params['phone'], $params['password'], $remember_me);
         } catch (AuthorizationException $exception) {
             $session->setData('message', $exception->getMessage());
             $session->setData('form', $params);
@@ -194,7 +252,8 @@ $app->get('/register-employee',
     });
 //Зарегистрировать сотрудника
 $app->post('/register-employee-post',
-    function (ServerRequestInterface $request, ResponseInterface $response) use ($authorization, $session) {
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use ($authorization, $session) {
         $params = (array)$request->getParsedBody();
         try {
             $authorization->register_employee($params);
@@ -238,7 +297,8 @@ $app->get("/my-applications",
     function (ServerRequestInterface $request,
               ResponseInterface $response) use ($database, $session, $twig) {
         if (!isClient($session,
-            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя"
+            )) {
             return $response->withHeader("Location", "/")->withStatus(302);
         }
         $query = $database->getConnection()->query(
@@ -252,7 +312,8 @@ $app->get("/my-applications",
     });
 //Создать заявление
 $app->get('/create-application',
-    function (ServerRequestInterface $request, ResponseInterface $response) use ($applications, $session) {
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use ($applications, $session) {
         if (!isClient($session,
             "Для этого действия необходимо в качестве пользователя")) {
             return $response->withHeader("Location", "/")->withStatus(302);
@@ -270,7 +331,8 @@ $app->get('/create-application',
     });
 //Все необработанные заявления
 $app->get("/applications",
-    function (ServerRequestInterface $request, ResponseInterface $response) use ($database, $session, $twig) {
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use ($database, $session, $twig) {
         if (!isEmployee($session,
             "Для доступа к этой информации необходимо быть сотрудником")) {
             return $response->withHeader("Location", "/")->withStatus(302);
@@ -300,7 +362,8 @@ $app->get('/applications/{application_id}',
                        WHERE a.id = {$args['application_id']}"
         );
         return renderPageByQuery($query, $session, $twig, $response,
-            "applications/application_details.twig", "application", 1);
+            "applications/application_details.twig",
+            "application", 1);
     });
 //Обработать заявление
 $app->post('/edit-application/{application_id}',
@@ -312,8 +375,9 @@ $app->post('/edit-application/{application_id}',
         } catch (ApplicationException $exception) {
             $session->setData('message', $exception->getMessage());
             $session->setData('form', $params);
-            return $response->withHeader('Location', "/applications/{$args['application_id']}")
-                ->withStatus(302);
+            return $response->withHeader('Location',
+                "/applications/{$args['application_id']}"
+            )->withStatus(302);
         }
         if ($result == true) {
             $contracts->create_contract($args['application_id']);
@@ -330,7 +394,8 @@ $app->get("/my-contracts",
     function (ServerRequestInterface $request,
               ResponseInterface $response) use ($database, $session, $twig) {
         if (!isClient($session,
-            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя"
+            )) {
             return $response->withHeader("Location", "/")->withStatus(302);
         }
         $query = $database->getConnection()->query(
@@ -389,16 +454,20 @@ $app->get("/contracts/{client_id}",
     function (ServerRequestInterface $request,
               ResponseInterface $response, $args) use ($database, $session, $twig) {
         if (!isEmployee($session,
-            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя"
+            )) {
             return $response->withHeader("Location", "/")->withStatus(302);
         }
         if (!readyToSignTheContract($session,
         "Клиент обязан подтвердить свою личность перед подписанием договора")) {
-            return $response->withHeader("Location", "/contract-validation")->withStatus(302);
+            return $response->withHeader("Location",
+                "/contract-validation"
+            )->withStatus(302);
         }
 
         $query = $database->getConnection()->query(
-        "SELECT cont.id, cont.number as num, c.surname, c.given_name, c.patronymic, c.series, c.number, c.age
+        "SELECT cont.id, cont.number as num, c.surname,
+                        c.given_name, c.patronymic, c.series, c.number, c.age
                         FROM contract cont JOIN client c on c.id = cont.client_id
                         WHERE client_id = {$args['client_id']}
                         AND status = 'ready'"
@@ -427,7 +496,8 @@ $app->get("/contracts/{client_id}",
     });
 // Все договоры со статусом preparing
 $app->get("/contracts",
-    function (ServerRequestInterface $request, ResponseInterface $response) use ($database, $session, $twig) {
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use ($database, $session, $twig) {
         if (!isEmployee($session,
             "Для доступа к этой информации необходимо быть сотрудником")) {
             return $response->withHeader("Location", "/")->withStatus(302);
@@ -451,8 +521,8 @@ $app->get('/process-contract/{contract_id}',
             return $response->withHeader("Location", "/")->withStatus(302);
         }
         $query = $database->getConnection()->query(
-            "SELECT cont.id, cont.number as num, c.given_name, c.surname, c.patronymic, c.age,
-                                c.series, c.number
+            "SELECT cont.id, cont.number as num, c.given_name, c.surname,
+                        c.patronymic, c.age, c.series, c.number
                        FROM contract cont JOIN client c on cont.client_id = c.id
                        WHERE cont.id = {$args['contract_id']}"
         );
@@ -477,7 +547,8 @@ $app->post('/process-contract-post/{contract_id}',
 //Обработать подписание договора
 $app->post('/contract-signing-post/{contract_id}',
     function (ServerRequestInterface $request,
-              ResponseInterface $response, $args) use ($cards_n_accounts, $database, $contracts, $session) {
+              ResponseInterface $response, $args)
+            use ($cards_n_accounts, $database, $contracts, $session) {
         if (!isEmployee($session,
             "Для доступа к этой информации необходимо быть сотрудником")) {
             return $response->withHeader("Location", "/")->withStatus(302);
@@ -527,7 +598,8 @@ $app->get("/my-accounts",
     function (ServerRequestInterface $request,
               ResponseInterface $response) use ($database, $session, $twig) {
         if (!isClient($session,
-            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя"
+            )) {
             return $response->withHeader("Location", "/")->withStatus(302);
         }
         $query = $database->getConnection()->query(
@@ -547,7 +619,8 @@ $app->get("/my-cards",
     function (ServerRequestInterface $request,
               ResponseInterface $response) use ($database, $session, $twig) {
         if (!isClient($session,
-            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя"
+            )) {
             return $response->withHeader("Location", "/")->withStatus(302);
         }
         $query = $database->getConnection()->query(
@@ -561,7 +634,8 @@ $app->get("/my-cards",
     });
 // Все карты со статусом preparing
 $app->get("/cards",
-    function (ServerRequestInterface $request, ResponseInterface $response) use ($database, $session, $twig) {
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use ($database, $session, $twig) {
         if (!isEmployee($session,
             "Для доступа к этой информации необходимо быть сотрудником")) {
             return $response->withHeader("Location", "/")->withStatus(302);
@@ -585,7 +659,8 @@ $app->get('/cards/{card_id}',
             return $response->withHeader("Location", "/")->withStatus(302);
         }
         $query = $database->getConnection()->query(
-            "SELECT card.id, card.number, pin, cvv, service_end_date, c.surname, c.given_name
+            "SELECT card.id, card.number,
+                        pin, cvv, service_end_date, c.surname, c.given_name
                        FROM card JOIN client c on card.client_id = c.id
                        WHERE card.id = {$args['card_id']}"
         );
@@ -654,12 +729,15 @@ $app->get("/get-card/{client_id}",
     function (ServerRequestInterface $request,
               ResponseInterface $response, $args) use ($database, $session, $twig) {
         if (!isEmployee($session,
-            "Для доступа к этой информации необходимо зайти в система в качестве пользователя")) {
+            "Для доступа к этой информации необходимо зайти в система в качестве пользователя"
+            )) {
             return $response->withHeader("Location", "/")->withStatus(302);
         }
         if (!readyToGetCard($session,
             "Клиент обязан подтвердить свою личность перед получением карты")) {
-            return $response->withHeader("Location", "/card-validation")->withStatus(302);
+            return $response->withHeader("Location",
+                "/card-validation"
+            )->withStatus(302);
         }
 
         $statement = $database->getConnection()->prepare(
@@ -677,7 +755,9 @@ $app->get("/get-card/{client_id}",
         if ($rows == false) {
             $session->setData("message", "Этот пользователь не имеет карт, готовых к выдаче");
             $session->flush('ready_to_get_card');
-            return $response->withHeader("Location", "/card-validation")->withStatus(302);
+            return $response->withHeader("Location",
+                "/card-validation"
+            )->withStatus(302);
         }
 
         $session->setData('card', $rows);
@@ -737,10 +817,31 @@ $app->post('/card-giving-post/{card_id}',
 
 //Завершить сессию
 $app->get('/logout',
-    function (ServerRequestInterface $request, ResponseInterface $response) use ($session) {
-        $session->setData('user', null);
-        return $response->withHeader('Location', '/')
-            ->withStatus(302);
+    function (ServerRequestInterface $request,
+              ResponseInterface $response) use ($database, $session) {
+        if($session->getData("user")["is_staff"] != true) {
+            if (isset($_COOKIE["password_cookie_token"]) && !empty($_COOKIE["password_cookie_token"])) {
+                $database->getConnection()->query(
+                    "UPDATE employee 
+                           SET password_cookie_token = '' 
+                           WHERE id = '" . $_SESSION["user"]["id"] . "'"
+                );
+                setcookie("password_cookie_token", "", -time() + 60, "/");
+            }
+        } else {
+            if (isset($_COOKIE["password_cookie_token"]) &&
+                !empty($_COOKIE["password_cookie_token"])) {
+                $database->getConnection()->query(
+                    "UPDATE client 
+                           SET password_cookie_token = '' 
+                           WHERE id = '" . $_SESSION["user"]["id"] . "'"
+                );
+                setcookie("password_cookie_token", "", -time() + 60, "/");
+            }
+        }
+        $_SESSION = array();
+        header("Location: /");
+        exit;
     });
 
 //Запускаем приложение

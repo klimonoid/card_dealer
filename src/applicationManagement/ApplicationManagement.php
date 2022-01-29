@@ -78,7 +78,7 @@ class ApplicationManagement
         $this->database->getConnection()->query("
             LOCK TABLES application WRITE;
         ");
-//        sleep(15);
+        sleep(15);
         $statement = $this->database->getConnection()->prepare(
             'UPDATE application SET
                     inspector_id = :inspector_id, status = :status, comment = :comment

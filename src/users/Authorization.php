@@ -121,7 +121,7 @@ class Authorization
      * @return bool
      * @throws AuthorizationException
      */
-    public function login(string $phone, string $password): bool
+    public function login(string $phone, string $password, $remember_me): bool
     {
         if(empty($phone)) {
             throw new AuthorizationException('Номер телефона не должен быть пустым');
@@ -140,6 +140,23 @@ class Authorization
             throw new AuthorizationException('Пользователя с таким номером телефона не существует');
         }
         if(password_verify($password, $user['password'])) {
+
+            if ($remember_me == "on"){
+                $password_cookie_token = md5($password);
+                $this->database->getConnection()->query(
+                    "UPDATE client SET password_cookie_token='".$password_cookie_token."' 
+                           WHERE phone='".$phone."'");
+                setcookie("password_cookie_token", $password_cookie_token, time() + 1000 * 60 * 60 * 24 * 30, "/");
+            }
+            else{
+                if(isset($_COOKIE["password_cookie_token"])){
+                    $this->database->getConnection()->query(
+                        "UPDATE client SET password_cookie_token='' 
+                           WHERE phone='".$phone."'");
+                    setcookie("password_cookie_token", "", time() - 3600, "/");
+                }
+            }
+
             $this->session->setData('user', [
                 'user_id' => $user['id'],
                 'given_name' => $user['given_name'],
@@ -218,7 +235,7 @@ class Authorization
      * @return bool
      * @throws AuthorizationException
      */
-    public function login_employee(string $phone, string $password): bool
+    public function login_employee(string $phone, string $password, $remember_me): bool
     {
         if(empty($phone)) {
             throw new AuthorizationException('Номер телефона не должен быть пустым');
@@ -237,6 +254,23 @@ class Authorization
             throw new AuthorizationException('Сотрудника с таким номером телефона не существует');
         }
         if(password_verify($password, $employee['password'])) {
+
+            if ($remember_me == "on"){
+                $password_cookie_token = md5($password);
+                $this->database->getConnection()->query(
+                    "UPDATE client SET password_cookie_token='".$password_cookie_token."' 
+                           WHERE phone='".$phone."'");
+                setcookie("password_cookie_token", $password_cookie_token, time() + 1000 * 60 * 60 * 24 * 30, "/");
+            }
+            else{
+                if(isset($_COOKIE["password_cookie_token"])){
+                    $this->database->getConnection()->query(
+                        "UPDATE client SET password_cookie_token='' 
+                           WHERE phone='".$phone."'");
+                    setcookie("password_cookie_token", "", time() - 3600, "/");
+                }
+            }
+
             $this->session->setData('user', [
                 'user_id' => $employee['id'],
                 'given_name' => $employee['given_name'],
