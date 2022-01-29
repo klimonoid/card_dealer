@@ -16,10 +16,10 @@ CREATE TABLE client
 CREATE TABLE account
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    number NUMERIC (20, 0) NOT NULL, # 408 17 810 5 6200 ХХХХХХХ
+    number NUMERIC (20, 0) NULL, # 408 17 810 5 6200 ХХХХХХХ
     correspondent_account NUMERIC (20, 0) NOT NULL DEFAULT 30101810400000000225,
     bic NUMERIC (9, 0) NOT NULL DEFAULT 044525225,
-    inn NUMERIC (12, 0) NOT NULL, # 7707 XXXXXX 00
+    inn NUMERIC (12, 0) NULL, # 7707 XXXXXX 00
     kpp NUMERIC (9, 0) NOT NULL DEFAULT 770743001,
     open_date TIME NOT NULL,
     balance BIGINT NOT NULL,
@@ -30,9 +30,9 @@ CREATE TABLE account
 CREATE TABLE card
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    number NUMERIC (16, 0) NOT NULL, # 5469 38XX XXXX XXX7
+    number NUMERIC (16, 0) NULL, # 5469 38XX XXXX XXX7
     pin NUMERIC (4, 0),
-    cvv NUMERIC (3, 0) NOT NULL,
+    cvv NUMERIC (3, 0) NULL,
     service_end_date TIME NOT NULL,
     status ENUM ('preparing', 'ready', 'working', 'lost') NOT NULL,
     client_id INT NOT NULL REFERENCES client (id),
