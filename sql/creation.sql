@@ -21,7 +21,7 @@ CREATE TABLE account
     bic NUMERIC (9, 0) NOT NULL DEFAULT 044525225,
     inn NUMERIC (12, 0) NULL, # 7707 XXXXXX 00
     kpp NUMERIC (9, 0) NOT NULL DEFAULT 770743001,
-    open_date TIME NOT NULL,
+    open_date DATE NOT NULL,
     balance BIGINT NOT NULL,
     client_id INT NOT NULL REFERENCES client (id),
     status ENUM ('frozen', 'working') NOT NULL
@@ -31,9 +31,9 @@ CREATE TABLE card
 (
     id SERIAL PRIMARY KEY NOT NULL,
     number NUMERIC (16, 0) NULL, # 5469 38XX XXXX XXX7
-    pin NUMERIC (4, 0),
+    pin NUMERIC (4, 0) NULL,
     cvv NUMERIC (3, 0) NULL,
-    service_end_date TIME NOT NULL,
+    service_end_date DATE NOT NULL,
     status ENUM ('preparing', 'ready', 'working', 'lost') NOT NULL,
     client_id INT NOT NULL REFERENCES client (id),
     account_id INT NOT NULL REFERENCES account (id)
@@ -56,7 +56,7 @@ CREATE TABLE application
     number BIGINT UNSIGNED NULL,
     applicant_id INT NOT NULL REFERENCES client (id),
     inspector_id INT NULL REFERENCES employee (id),
-    date_of_submission TIME NOT NULL,
+    date_of_submission DATETIME NOT NULL,
     status ENUM('accepted', 'approved', 'rejected') NOT NULL,
     comment CHAR(255)
 );
@@ -70,7 +70,7 @@ CREATE TABLE contract
     inspector_id INT NULL REFERENCES employee (id),
     account_id INT REFERENCES account (id),
     card_id INT REFERENCES card (id),
-    date_of_submission TIME,
+    date_of_submission DATETIME,
     status ENUM ('preparing', 'ready', 'accepted', 'rejected') NOT NULL,
     comment CHAR(255)
 );
