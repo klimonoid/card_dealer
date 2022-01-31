@@ -75,9 +75,11 @@ class ApplicationManagement
                 '(Максимальный размер – 255 символов)'
             );
         }
-        $this->database->getConnection()->query("
-            LOCK TABLES application WRITE;
-        ");
+        if($params['block'] == 'on') {
+            $this->database->getConnection()->query("
+                LOCK TABLES application WRITE;
+            ");
+        }
         sleep(15);
         $statement = $this->database->getConnection()->prepare(
             'UPDATE application SET
@@ -94,7 +96,9 @@ class ApplicationManagement
             'comment' => $params['comment'],
             'id' => $application_id
         ]);
-        $this->database->getConnection()->query("UNLOCK TABLES;");
+        if($params['block'] == 'on') {
+            $this->database->getConnection()->query("UNLOCK TABLES;");
+        }
         if ($status == 'approved') {
             return true;
         } else {

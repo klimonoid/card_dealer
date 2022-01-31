@@ -359,7 +359,7 @@ $app->get('/applications/{application_id}',
             "SELECT a.id, a.date_of_submission, c.given_name, c.surname, c.patronymic, c.age,
                                 c.series, c.number, c.phone
                        FROM application a JOIN client c on a.applicant_id = c.id
-                       WHERE a.id = {$args['application_id']}"
+                       WHERE a.id = {$args['application_id']} AND status = 'accepted'"
         );
         return renderPageByQuery($query, $session, $twig, $response,
             "applications/application_details.twig",
@@ -524,7 +524,7 @@ $app->get('/process-contract/{contract_id}',
             "SELECT cont.id, cont.number as num, c.given_name, c.surname,
                         c.patronymic, c.age, c.series, c.number
                        FROM contract cont JOIN client c on cont.client_id = c.id
-                       WHERE cont.id = {$args['contract_id']}"
+                       WHERE cont.id = {$args['contract_id']} AND status = 'preparing'"
         );
         return renderPageByQuery($query, $session, $twig, $response,
             "contracts/make_contract.twig", "contract", 1);
@@ -533,8 +533,9 @@ $app->get('/process-contract/{contract_id}',
 $app->post('/process-contract-post/{contract_id}',
     function (ServerRequestInterface $request,
               ResponseInterface $response, $args) use ($contracts, $session) {
+        $params = (array) $request->getParsedBody();
         try {
-            $contracts->fromPreparingToReady($args['contract_id']);
+            $contracts->fromPreparingToReady($args['contract_id'], $params['block']);
         } catch (ApplicationException $exception) {
             $session->setData('message', $exception->getMessage());
             return $response->withHeader('Location', "/process-contract/{contract_id}")
@@ -662,7 +663,7 @@ $app->get('/cards/{card_id}',
             "SELECT card.id, card.number,
                         pin, cvv, service_end_date, c.surname, c.given_name
                        FROM card JOIN client c on card.client_id = c.id
-                       WHERE card.id = {$args['card_id']}"
+                       WHERE card.id = {$args['card_id']} AND status = 'preparing'"
         );
         return renderPageByQuery($query, $session, $twig, $response,
             "cards/card-details.twig", "card", 1);
@@ -671,8 +672,9 @@ $app->get('/cards/{card_id}',
 $app->post('/process-card-post/{card_id}',
     function (ServerRequestInterface $request,
               ResponseInterface $response, $args) use ($cards_n_accounts, $session) {
+        $params = (array)$request->getParsedBody();
         try {
-            $cards_n_accounts->fromPreparingToReady($args['card_id']);
+            $cards_n_accounts->fromPreparingToReady($args['card_id'], $params['block']);
         } catch (ApplicationException $exception) {
             $session->setData('message', $exception->getMessage());
             return $response->withHeader('Location', "/process-contract/{contract_id}")

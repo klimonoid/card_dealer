@@ -82,11 +82,13 @@ class CardsAndAccountsManagement
         ]);
     }
 
-    public function fromPreparingToReady($card_id)
+    public function fromPreparingToReady($card_id, $block='on')
     {
-        $this->database->getConnection()->query("
-            LOCK TABLES card WRITE;
-        ");
+        if($block == 'on') {
+            $this->database->getConnection()->query("
+                LOCK TABLES card WRITE;
+            ");
+        }
 //        sleep(15);
         $statement = $this->database->getConnection()->prepare(
             'UPDATE card SET
@@ -97,8 +99,9 @@ class CardsAndAccountsManagement
             'status' => 'ready',
             'id' => $card_id
         ]);
-
-        $this->database->getConnection()->query("UNLOCK TABLES;");
+        if($block == 'on') {
+            $this->database->getConnection()->query("UNLOCK TABLES;");
+        }
     }
 
     /**

@@ -81,11 +81,13 @@ class ContractManagement
         throw new AuthorizationException('Неверные номер телефона или пароль');
     }
 
-    public function fromPreparingToReady($contract_id)
+    public function fromPreparingToReady($contract_id, $block='on')
     {
-        $this->database->getConnection()->query("
-            LOCK TABLES contract WRITE;
-        ");
+        if($block == 'on') {
+            $this->database->getConnection()->query("
+                LOCK TABLES contract WRITE;
+            ");
+        }
 //        sleep(15);
         $statement = $this->database->getConnection()->prepare(
             'UPDATE contract SET
@@ -97,8 +99,9 @@ class ContractManagement
             'comment' => 'Ждём вас в отделении банка для подписания договора',
             'id' => $contract_id
         ]);
-
-        $this->database->getConnection()->query("UNLOCK TABLES;");
+        if($block == 'on') {
+            $this->database->getConnection()->query("UNLOCK TABLES;");
+        }
     }
 
     /**

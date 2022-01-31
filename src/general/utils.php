@@ -45,13 +45,12 @@ function renderPageByQuery($query, $session, $twig, $response,
 {
     if ($need_one == 1) {
         $rows = $query->fetch();
+        if ($rows == false) {
+            return $response->withStatus(404);
+        }
     } else {
         $rows = $query->fetchAll();
     }
-
-//    if ($rows == false) {
-//        return $response->withStatus(404);
-//    }
 
     $session->setData($name_form, $rows);
     $body = $twig->render($name_render_page, [

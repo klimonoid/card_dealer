@@ -21,6 +21,12 @@
                 Сверьте данные карты с данными предоставленными на экране
             </p>
             <form method="post" action="/process-card-post/{{ card.id }}">
+                <div class="form-check mb-3">
+                    <input class="form-check-input" name="block" type="checkbox" value="on" id="block">
+                    <label class="form-check-label" for="block">
+                        Блокировка
+                    </label>
+                </div>
                 <button type="submit" class="btn btn-primary">Карта в отделении</button>
             </form>
         </div>
